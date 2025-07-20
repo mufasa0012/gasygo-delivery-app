@@ -7,7 +7,7 @@ export const products: Product[] = [
   { id: '4', name: 'Total Gas 13kg', category: 'Gas Cylinder', price: 2600, stock: 25, image: 'https://placehold.co/400x400.png', description: '13kg Total Gas cylinder for heavy users.' },
   { id: '5', name: 'Afrigas 6kg', category: 'Gas Cylinder', price: 1150, stock: 60, image: 'https://placehold.co/400x400.png', description: 'Affordable and reliable 6kg Afrigas cylinder.' },
   { id: '6', name: 'DrachenGas 13kg', category: 'Gas Cylinder', price: 2550, stock: 20, image: 'https://placehold.co/400x400.png', description: 'Premium 13kg DrachenGas cylinder.' },
-  { id: '7', name: 'Gas Regulator', category: 'Accessory', price: 800, stock: 100, image: 'https://placehold.co/400x400.png', description: 'High-quality gas regulator for safety.' },
+  { id: '7', name: 'Gas Regulator', category: 'Accessory', price: 800, stock: 100, image: 'https://firebasestorage.googleapis.com/v0/b/app-hosting-project.appspot.com/o/images%2Fckpu86sg000003e67m3u05c3t?alt=media&token=81a79883-93d3-4903-bb6f-998845184288', description: 'High-quality gas regulator for safety.' },
   { id: '8', name: 'Hosepipe', category: 'Accessory', price: 300, stock: 150, image: 'https://placehold.co/400x400.png', description: 'Durable gas hosepipe, 1.5m length.' },
   { id: '9', name: 'Gas Lighter', category: 'Accessory', price: 150, stock: 200, image: 'https://placehold.co/400x400.png', description: 'Easy-to-use gas lighter.' },
   { id: '10', name: 'Portable Grill', category: 'Accessory', price: 3500, stock: 15, image: 'https://placehold.co/400x400.png', description: 'Compact grill for outdoor cooking.' },

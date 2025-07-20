@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { FlameKindling, LayoutDashboard, Menu, Phone, ShoppingCart } from 'lucide-react';
 
 export function Header() {
@@ -36,13 +36,18 @@ export function Header() {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-              <Link href="/" className="flex items-center gap-2 mb-8">
-                <FlameKindling className="h-7 w-7 text-primary" />
-                <span className="font-headline text-2xl font-bold text-primary">GasyGo</span>
-              </Link>
+              <SheetHeader className="mb-8">
+                <SheetTitle>
+                    <Link href="/" className="flex items-center gap-2">
+                        <FlameKindling className="h-7 w-7 text-primary" />
+                        <span className="font-headline text-2xl font-bold text-primary">GasyGo</span>
+                    </Link>
+                </SheetTitle>
+              </SheetHeader>
               <nav className="flex flex-col gap-6">
                 {navLinks.map((link) => (
                   <Link key={link.href} href={link.href} className="text-lg font-medium">

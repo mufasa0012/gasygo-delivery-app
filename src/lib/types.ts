@@ -1,7 +1,7 @@
 export type Product = {
   id: string;
   name: string;
-  category: 'Gas Cylinder' | 'Accessory';
+  category: 'Gas Cylinder' | 'Accessory' | 'Full Set';
   price: number;
   stock: number;
   image: string;

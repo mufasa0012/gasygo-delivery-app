@@ -1,0 +1,140 @@
+'use client';
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LocationPicker } from "./LocationPicker";
+import { useRouter } from "next/navigation";
+
+const formSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    phone: z.string().regex(/^0\d{9}$/, { message: "Please enter a valid Kenyan phone number." }),
+    address: z.string().optional(),
+    apartment: z.string().optional(),
+    landmark: z.string().optional(),
+    paymentMethod: z.enum(["mpesa", "cash"], { required_error: "You need to select a payment method." }),
+    notes: z.string().optional(),
+});
+
+export function CheckoutForm() {
+    const router = useRouter();
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            phone: "",
+            paymentMethod: "mpesa",
+        },
+    });
+
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        console.log(values);
+        // In a real app, you would submit this data to your backend
+        // and handle the order creation process.
+        router.push('/order/confirmation');
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline">Contact Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Full Name</FormLabel>
+                                    <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl><Input placeholder="0712345678" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <LocationPicker form={form} />
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline">Payment Method</CardTitle>
+                        <CardDescription>Choose how you'd like to pay.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <FormField
+                            control={form.control}
+                            name="paymentMethod"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            className="flex flex-col space-y-2"
+                                        >
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl><RadioGroupItem value="mpesa" /></FormControl>
+                                                <FormLabel className="font-normal">M-Pesa (Pay on Delivery)</FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl><RadioGroupItem value="cash" /></FormControl>
+                                                <FormLabel className="font-normal">Cash on Delivery</FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <div className="mt-4 text-sm text-muted-foreground bg-secondary p-4 rounded-md">
+                            Our M-Pesa Till Number is <strong className="text-foreground">123456</strong>. Please complete payment upon delivery confirmation.
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline">Order Notes (Optional)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <FormField
+                            control={form.control}
+                            name="notes"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Textarea placeholder="e.g. Call upon arrival, leave with watchman..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+
+                <Button type="submit" size="lg" className="w-full text-lg font-bold">Place Order</Button>
+            </form>
+        </Form>
+    );
+}

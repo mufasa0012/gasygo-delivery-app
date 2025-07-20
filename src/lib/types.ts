@@ -1,0 +1,41 @@
+export type Product = {
+  id: string;
+  name: string;
+  category: 'Gas Cylinder' | 'Accessory';
+  price: number;
+  stock: number;
+  image: string;
+  description?: string;
+};
+
+export type CartItem = {
+  product: Product;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  items: CartItem[];
+  total: number;
+  status: 'Pending' | 'Accepted' | 'In Progress' | 'Delivered' | 'Declined';
+  paymentMethod: 'M-Pesa' | 'Cash on Delivery';
+  deliveryAddress: string;
+  driverId?: string;
+  createdAt: Date;
+};
+
+export type Customer = {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  orderHistory: string[];
+};
+
+export type Driver = {
+  id: string;
+  name: string;
+  phone: string;
+};

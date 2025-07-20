@@ -20,6 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/lib/types";
 import { useState } from "react";
 import Image from "next/image";
+import { db, storage } from "@/lib/firebase";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -37,7 +42,9 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ product, children }: EditProductDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(product?.image || null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,12 +57,61 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log("Submitting:", values);
-    // In a real app, you would handle file upload to Firebase Storage here
-    // and then save the product data (with the image URL) to Firestore.
-    setOpen(false); // Close dialog on success
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    try {
+      let imageUrl = product?.image || "";
+      const imageFile = values.image;
+
+      // 1. Handle image upload if a new image is provided
+      if (imageFile && imageFile instanceof File) {
+        const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      const productData = {
+        name: values.name,
+        category: values.category,
+        price: values.price,
+        stock: values.stock,
+        description: values.description || "",
+        image: imageUrl,
+      };
+
+      // 2. Add or update document in Firestore
+      if (product) {
+        // Update existing product
+        const productRef = doc(db, "products", product.id);
+        await updateDoc(productRef, productData);
+        toast({
+          title: "Product Updated!",
+          description: `${product.name} has been successfully updated.`,
+        });
+      } else {
+        // Add new product
+        await addDoc(collection(db, "products"), productData);
+        toast({
+          title: "Product Added!",
+          description: `${values.name} has been successfully added to your inventory.`,
+        });
+        form.reset();
+        setPreviewImage(null);
+      }
+
+      setOpen(false); // Close dialog on success
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast({
+        variant: "destructive",
+        title: "Oh no! Something went wrong.",
+        description: "There was a problem saving the product. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -166,7 +222,10 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
               )}
             />
              <DialogFooter>
-                <Button type="submit">Save changes</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save changes
+                </Button>
             </DialogFooter>
           </form>
         </Form>

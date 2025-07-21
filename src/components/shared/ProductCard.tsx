@@ -16,6 +16,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
       <CardHeader className="p-0">
         <div className="relative aspect-square w-full">
           <Image
+            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
             src={product.image}
             alt={product.name}
             fill

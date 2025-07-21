@@ -68,7 +68,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 {products.map((product) => (
                     <TableRow key={product.id}>
                         <TableCell>
-                            <Image src={product.image || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
+                            <Image urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT} src={product.image || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
                         </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell><Badge variant="outline">{product.category}</Badge></TableCell>

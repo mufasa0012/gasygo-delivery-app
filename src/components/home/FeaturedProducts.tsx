@@ -8,13 +8,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/shared/ProductCard';
 import { Loader2 } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+import * as React from 'react';
 
 export function FeaturedProducts() {
   const [productsCollection, loading, error] = useCollection(
-    query(collection(db, "products"), limit(4))
+    query(collection(db, "products"), limit(8))
   );
 
   const featured: Product[] = productsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)) || [];
+  
+  const plugin = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  );
 
   return (
     <section className="py-20 md:py-28 bg-card">
@@ -28,11 +35,28 @@ export function FeaturedProducts() {
         {error && <p className="text-destructive text-center">Error: {error.message}</p>}
         
         {!loading && !error && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <Carousel
+            plugins={[plugin.current]}
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {featured.map((product) => (
+                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
+                  <div className="p-1">
+                    <ProductCard product={product} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex" />
+            <CarouselNext className="hidden sm:flex" />
+          </Carousel>
         )}
 
         <div className="mt-12 text-center">

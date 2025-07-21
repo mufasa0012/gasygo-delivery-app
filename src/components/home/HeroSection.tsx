@@ -8,8 +8,8 @@ export function HeroSection() {
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] text-white">
       <Image
-        src="https://firebasestorage.googleapis.com/v0/b/app-hosting-project.appspot.com/o/images%2Fckpu86ryi00003e67m2y685h0?alt=media&token=8e921503-68d1-443b-8167-9d7a0ea6f91f"
-        alt="A vibrant street scene with stacks of colorful gas cylinders"
+        src="https://ik.imagekit.io/phyxsbhhe/gasygo/gas-cylinders-hero.png"
+        alt="A collection of various branded gas cylinders like K-Gas, Afrigas, and Totalgaz"
         fill
         className="object-cover"
         priority

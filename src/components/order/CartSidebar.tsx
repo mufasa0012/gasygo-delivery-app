@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Product, CartItem } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,48 +11,70 @@ import { MinusCircle, PlusCircle, ShoppingCart, X } from 'lucide-react';
 import Link from 'next/link';
 
 // In a real app, this would use a global state manager like Context or Zustand
-// For now, we'll keep it simple with local state and event listeners.
+// For this prototype, we'll use localStorage to persist the cart across pages.
+const CART_STORAGE_KEY = 'gasygo-cart';
 
 export function CartSidebar() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
 
-  const handleAddToCart = (product: Product) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.product.id === product.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
+  useEffect(() => {
+    try {
+        const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+        if (storedCart) {
+            setCart(JSON.parse(storedCart));
+        }
+    } catch (error) {
+        console.error("Failed to parse cart from localStorage", error);
+    }
+  }, []);
+
+  const updateCartState = (newCart: CartItem[]) => {
+      setCart(newCart);
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+      } catch (error) {
+        console.error("Failed to save cart to localStorage", error);
       }
-      return [...prevCart, { product, quantity: 1 }];
-    });
+  }
+
+  const handleAddToCart = useCallback((product: Product) => {
+    const newCart = [...cart];
+    const existingItem = newCart.find((item) => item.product.id === product.id);
+
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        newCart.push({ product, quantity: 1 });
+    }
+    updateCartState(newCart);
+
     toast({
       title: 'Added to cart!',
       description: `${product.name} is now in your cart.`,
     });
-  };
+  }, [cart, toast]);
 
   const updateQuantity = (productId: string, amount: number) => {
-    setCart(prevCart => {
-      return prevCart.map(item => {
-        if (item.product.id === productId) {
-          const newQuantity = item.quantity + amount;
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
+    let newCart = [...cart];
+    const itemIndex = newCart.findIndex(item => item.product.id === productId);
+
+    if (itemIndex > -1) {
+        newCart[itemIndex].quantity += amount;
+        if (newCart[itemIndex].quantity <= 0) {
+            newCart.splice(itemIndex, 1);
         }
-        return item;
-      }).filter(Boolean) as CartItem[];
-    });
+    }
+    updateCartState(newCart);
   };
 
   const removeFromCart = (productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
+    const newCart = cart.filter(item => item.product.id !== productId);
+    updateCartState(newCart);
   };
 
   const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
 
-  // This is a temporary solution to listen for an add-to-cart event.
-  // A proper global state manager would be better.
   useEffect(() => {
     const handleAddToCartEvent = (event: Event) => {
       const { product } = (event as CustomEvent).detail;
@@ -64,7 +86,7 @@ export function CartSidebar() {
     return () => {
       document.removeEventListener('addToCart', handleAddToCartEvent);
     };
-  }, []);
+  }, [handleAddToCart]);
 
   return (
     <Card className="shadow-lg">
@@ -107,10 +129,9 @@ export function CartSidebar() {
                 <span>Total</span>
                 <span>Ksh {cartTotal.toLocaleString()}</span>
             </div>
-          <Button asChild className="w-full" size="lg" disabled>
+          <Button asChild className="w-full" size="lg">
             <Link href="/order/checkout">Proceed to Checkout</Link>
           </Button>
-          <p className="text-xs text-muted-foreground text-center">Checkout will be enabled when cart state is managed globally.</p>
         </CardFooter>
       )}
     </Card>

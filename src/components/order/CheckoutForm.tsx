@@ -11,33 +11,89 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LocationPicker } from "./LocationPicker";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import type { CartItem } from "@/lib/types";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     phone: z.string().regex(/^0\d{9}$/, { message: "Please enter a valid Kenyan phone number." }),
-    address: z.string().optional(),
+    address: z.string().min(5, { message: "Please provide a valid address." }),
     apartment: z.string().optional(),
     landmark: z.string().optional(),
     paymentMethod: z.enum(["mpesa", "cash"], { required_error: "You need to select a payment method." }),
     notes: z.string().optional(),
 });
 
-export function CheckoutForm() {
+interface CheckoutFormProps {
+    cart: CartItem[];
+    total: number;
+}
+
+export function CheckoutForm({ cart, total }: CheckoutFormProps) {
     const router = useRouter();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
             phone: "",
+            address: "",
             paymentMethod: "mpesa",
         },
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
-        // In a real app, you would submit this data to your backend
-        // and handle the order creation process.
-        router.push('/order/confirmation');
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (cart.length === 0) {
+            toast({
+                variant: "destructive",
+                title: "Your cart is empty!",
+                description: "Please add items to your cart before placing an order."
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const orderData = {
+                customerName: values.name,
+                customerPhone: values.phone,
+                deliveryAddress: `${values.address}, ${values.apartment || ''}, near ${values.landmark || ''}`.trim(),
+                items: cart, // In a real app, you might only store product IDs and quantities
+                total: total,
+                status: 'Pending',
+                paymentMethod: values.paymentMethod === 'mpesa' ? 'M-Pesa' : 'Cash on Delivery',
+                notes: values.notes || '',
+                createdAt: serverTimestamp(),
+            };
+
+            const docRef = await addDoc(collection(db, "orders"), orderData);
+
+            // Clear the cart from localStorage
+            localStorage.removeItem('gasygo-cart');
+
+            toast({
+                title: "Order Placed!",
+                description: "Your order has been successfully submitted."
+            });
+            
+            router.push(`/order/confirmation?orderId=${docRef.id}`);
+
+        } catch (error) {
+            console.error("Error creating order: ", error);
+            toast({
+                variant: "destructive",
+                title: "Oh no! Something went wrong.",
+                description: "There was a problem placing your order. Please try again."
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -133,7 +189,10 @@ export function CheckoutForm() {
                 </Card>
 
 
-                <Button type="submit" size="lg" className="w-full text-lg font-bold">Place Order</Button>
+                <Button type="submit" size="lg" className="w-full text-lg font-bold" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Place Order
+                </Button>
             </form>
         </Form>
     );

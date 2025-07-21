@@ -29,32 +29,34 @@ export default function DriversPage() {
             {loading && <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
             {error && <p className="text-destructive text-center">Error: {error.message}</p>}
             {!loading && !error && (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Driver ID</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Assigned Orders</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {drivers.map((driver) => (
-                            <TableRow key={driver.id}>
-                                <TableCell className="font-mono">{driver.id}</TableCell>
-                                <TableCell className="font-medium">{driver.name}</TableCell>
-                                <TableCell>{driver.phone}</TableCell>
-                                <TableCell>3</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Driver ID</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Phone</TableHead>
+                                <TableHead>Assigned Orders</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {drivers.map((driver) => (
+                                <TableRow key={driver.id}>
+                                    <TableCell className="font-mono">{driver.id}</TableCell>
+                                    <TableCell className="font-medium">{driver.name}</TableCell>
+                                    <TableCell>{driver.phone}</TableCell>
+                                    <TableCell>3</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             )}
         </div>
     );

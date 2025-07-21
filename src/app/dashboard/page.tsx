@@ -54,39 +54,41 @@ export default function DashboardPage() {
             {loading && <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
             {error && <p className="text-destructive text-center">Error: {error.message}</p>}
             {!loading && !error && (
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                        <TableCell>
-                        <div className="font-medium">{order.customerName}</div>
-                        <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
-                        </TableCell>
-                        <TableCell>
-                        <Badge variant={order.status === 'Pending' ? 'destructive' : order.status === 'Delivered' ? 'default' : 'secondary'}>
-                            {order.status}
-                        </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                            <Link href="/dashboard/orders">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {recentOrders.map((order) => (
+                            <TableRow key={order.id}>
+                                <TableCell>
+                                <div className="font-medium">{order.customerName}</div>
+                                <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
+                                </TableCell>
+                                <TableCell>
+                                <Badge variant={order.status === 'Pending' ? 'destructive' : order.status === 'Delivered' ? 'default' : 'secondary'}>
+                                    {order.status}
+                                </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" asChild>
+                                    <Link href="/dashboard/orders">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Link>
+                                </Button>
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             )}
           </CardContent>
         </Card>

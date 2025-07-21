@@ -114,7 +114,7 @@ export function OrdersTable({ orders, drivers }: OrdersTableProps) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Accepted')} disabled={order.status !== 'Pending'}>
+                                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'In Progress')} disabled={order.status !== 'Pending'}>
                                             <Check className="mr-2 h-4 w-4"/> Accept Order
                                         </DropdownMenuItem>
                                         <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(order.id, 'Declined')} disabled={order.status === 'Declined' || order.status === 'Delivered'}>

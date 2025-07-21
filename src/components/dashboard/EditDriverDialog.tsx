@@ -1,8 +1,9 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,9 +33,10 @@ interface EditDriverDialogProps {
 
 export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useFormState(addDriver, { success: false });
+  const [state, formAction] = useActionState(addDriver, { success: false });
 
   const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: driver?.name || '',
       phone: driver?.phone || '',

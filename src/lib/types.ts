@@ -21,7 +21,7 @@ export type Order = {
   customerPhone: string;
   items: CartItem[];
   total: number;
-  status: 'Pending' | 'Accepted' | 'In Progress' | 'Delivered' | 'Declined';
+  status: 'Pending' | 'In Progress' | 'Delivered' | 'Declined';
   paymentMethod: 'M-Pesa' | 'Cash on Delivery';
   deliveryAddress: string;
   driverId?: string;
@@ -40,4 +40,12 @@ export type Driver = {
   id: string;
   name: string;
   phone: string;
+  vehicle: string;
 };
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: 'admin' | 'customer' | 'driver';
+}

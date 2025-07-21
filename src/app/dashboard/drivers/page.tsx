@@ -61,7 +61,7 @@ export default function DriversPage() {
                                 <TableHead>Driver ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Phone</TableHead>
-                                <TableHead>Assigned Orders</TableHead>
+                                <TableHead>Vehicle</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -71,7 +71,7 @@ export default function DriversPage() {
                                     <TableCell className="font-mono text-xs">{driver.id.substring(0,6)}...</TableCell>
                                     <TableCell className="font-medium">{driver.name}</TableCell>
                                     <TableCell>{driver.phone}</TableCell>
-                                    <TableCell>3</TableCell>
+                                    <TableCell>{driver.vehicle}</TableCell>
                                     <TableCell className="text-right">
                                          <AlertDialog>
                                             <DropdownMenu>

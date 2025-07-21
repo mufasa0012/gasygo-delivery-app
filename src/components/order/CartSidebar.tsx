@@ -39,21 +39,30 @@ export function CartSidebar() {
   }
 
   const handleAddToCart = useCallback((product: Product) => {
-    const newCart = [...cart];
-    const existingItem = newCart.find((item) => item.product.id === product.id);
+    setCart(currentCart => {
+        const newCart = [...currentCart];
+        const existingItem = newCart.find((item) => item.product.id === product.id);
 
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        newCart.push({ product, quantity: 1 });
-    }
-    updateCartState(newCart);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            newCart.push({ product, quantity: 1 });
+        }
+        
+        try {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+        } catch (error) {
+            console.error("Failed to save cart to localStorage", error);
+        }
 
-    toast({
-      title: 'Added to cart!',
-      description: `${product.name} is now in your cart.`,
+        toast({
+            title: 'Added to cart!',
+            description: `${product.name} is now in your cart.`,
+        });
+
+        return newCart;
     });
-  }, [cart, toast]);
+  }, [toast]);
 
   const updateQuantity = (productId: string, amount: number) => {
     let newCart = [...cart];
@@ -97,7 +106,7 @@ export function CartSidebar() {
       </CardHeader>
       <CardContent>
         {cart.length === 0 ? (
-          <p className="text-muted-foreground text-center">Your cart is empty.</p>
+          <p className="text-muted-foreground text-center py-4">Your cart is empty.</p>
         ) : (
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-4">

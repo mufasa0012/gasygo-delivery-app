@@ -31,6 +31,8 @@ export default function DashboardPage() {
     }) || [];
     
     const totalOrders = allOrdersCollection?.size ?? 0;
+    const pendingOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
+    const newCustomers = allOrdersCollection?.docs.map(doc => doc.data().customerPhone).filter((value, index, self) => self.indexOf(value) === index).length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -47,8 +49,8 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard title="Total Revenue" value="Ksh 125,340" icon={<DollarSign />} note="+20.1% from last month" />
             <StatCard title="Total Orders" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : totalOrders.toString()} icon={<ShoppingCart />} note="All time" />
-            <StatCard title="Deliveries Pending" value="8" icon={<Truck />} note="2 assigned" />
-            <StatCard title="New Customers" value="12" icon={<Users />} note="+5 since last week" />
+            <StatCard title="Deliveries Pending" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : pendingOrders.toString()} icon={<Truck />} note="Ready for assignment" />
+            <StatCard title="Total Customers" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : newCustomers.toString()} icon={<Users />} note="All time unique customers" />
         </div>
 
         <Card>
@@ -78,7 +80,7 @@ export default function DashboardPage() {
                                 <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
                                 </TableCell>
                                 <TableCell>
-                                <Badge variant={order.status === 'Pending' ? 'destructive' : order.status === 'Delivered' ? 'default' : 'secondary'}>
+                                <Badge variant={order.status === 'Pending' ? 'secondary' : order.status === 'Delivered' ? 'default' : 'outline'}>
                                     {order.status}
                                 </Badge>
                                 </TableCell>

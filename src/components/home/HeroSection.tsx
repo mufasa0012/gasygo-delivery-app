@@ -8,6 +8,7 @@ export function HeroSection() {
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] text-white">
       <Image
+        urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
         src="/gasygo/gas-cylinders-in-a-row.jpg"
         alt="A collection of various branded gas cylinders like K-Gas, Afrigas, and Totalgaz"
         fill

@@ -24,9 +24,9 @@ export function Footer() {
           <div>
             <h3 className="font-headline text-lg font-semibold mb-3">Contact Info</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Phone: +254 712 345 678</li>
-              <li>WhatsApp: +254 712 345 678</li>
-              <li>Email: orders@gasygo.co.ke</li>
+              <li>Phone: +254704095021</li>
+              <li>WhatsApp: +254704095021</li>
+              <li>Email: mosesissa810@gmail.com</li>
             </ul>
           </div>
           <div>

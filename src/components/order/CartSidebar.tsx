@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Product, CartItem } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,7 @@ export function CartSidebar() {
 
   // This is a temporary solution to listen for an add-to-cart event.
   // A proper global state manager would be better.
-  useState(() => {
+  useEffect(() => {
     const handleAddToCartEvent = (event: Event) => {
       const { product } = (event as CustomEvent).detail;
       handleAddToCart(product);
@@ -64,7 +64,7 @@ export function CartSidebar() {
     return () => {
       document.removeEventListener('addToCart', handleAddToCartEvent);
     };
-  });
+  }, []);
 
   return (
     <Card className="shadow-lg">

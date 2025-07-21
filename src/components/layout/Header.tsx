@@ -3,14 +3,21 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { FlameKindling, LayoutDashboard, Menu, Phone, ShoppingCart } from 'lucide-react';
+import { FlameKindling, LayoutDashboard, Menu } from 'lucide-react';
+import { useState } from 'react';
 
 export function Header() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/order', label: 'Order Now' },
     { href: '/contact', label: 'Contact Us' },
   ];
+
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,7 +39,7 @@ export function Header() {
         </nav>
 
         <div className="md:hidden">
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
@@ -42,7 +49,7 @@ export function Header() {
             <SheetContent side="right">
               <SheetHeader className="mb-8">
                 <SheetTitle>
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/" onClick={handleLinkClick} className="flex items-center gap-2">
                         <FlameKindling className="h-7 w-7 text-primary" />
                         <span className="font-headline text-2xl font-bold text-primary">GasyGo</span>
                     </Link>
@@ -50,11 +57,11 @@ export function Header() {
               </SheetHeader>
               <nav className="flex flex-col gap-6">
                 {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-lg font-medium">
+                  <Link key={link.href} href={link.href} onClick={handleLinkClick} className="text-lg font-medium">
                     {link.label}
                   </Link>
                 ))}
-                 <Link href="/dashboard" className="text-lg font-medium flex items-center gap-2">
+                 <Link href="/dashboard" onClick={handleLinkClick} className="text-lg font-medium flex items-center gap-2">
                     <LayoutDashboard className="h-5 w-5" />
                     Dashboard
                 </Link>

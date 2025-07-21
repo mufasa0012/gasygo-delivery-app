@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/lib/types";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Image } from "@imagekit/next";
 import { db } from "@/lib/firebase";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
@@ -58,6 +58,22 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
       image: product?.image || "",
     },
   });
+
+  // When opening the dialog, if we are NOT editing a product, reset the form.
+  useEffect(() => {
+    if (open && !product) {
+      form.reset({
+        name: "",
+        category: "Gas Cylinder",
+        price: 0,
+        stock: 0,
+        description: "",
+        image: "",
+      });
+    } else if (open && product) {
+      form.reset(product);
+    }
+  }, [open, product, form]);
   
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,14 +84,15 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     try {
         const authResponse = await fetch('/api/imagekit/auth');
         if (!authResponse.ok) {
-            throw new Error('Failed to get authentication parameters');
+            const errorBody = await authResponse.json();
+            throw new Error(errorBody.error || 'Failed to get authentication parameters');
         }
         const authParams = await authResponse.json();
 
         const response = await upload({
             file,
             fileName: file.name,
-            ...authParams, // This now includes token, expire, signature, and publicKey
+            ...authParams,
         });
 
         form.setValue("image", response.url, { shouldValidate: true });
@@ -84,12 +101,12 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
             description: "Your image has been successfully uploaded.",
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Upload error:", error);
         toast({
           variant: "destructive",
           title: "Oh no! Image upload failed.",
-          description: "There was a problem uploading your image. Please try again.",
+          description: error.message || "There was a problem uploading your image. Please try again.",
         });
     } finally {
         setIsUploading(false);
@@ -122,18 +139,8 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
           title: "Product Added!",
           description: `${values.name} has been successfully added.`,
         });
-        form.reset({
-          name: "",
-          category: "Gas Cylinder",
-          price: 0,
-          stock: 0,
-          description: "",
-          image: "",
-        });
       }
       
-      // Manually trigger revalidation if needed
-      // revalidatePath('/dashboard/products');
       setOpen(false);
 
     } catch (error) {

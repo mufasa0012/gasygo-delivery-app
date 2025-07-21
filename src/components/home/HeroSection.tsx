@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { Image } from '@imagekit/next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Truck, Zap, ShieldCheck } from 'lucide-react';
@@ -8,7 +8,7 @@ export function HeroSection() {
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] text-white">
       <Image
-        src="https://ik.imagekit.io/phyxsbhhe/gasygo/gas-cylinders-hero.png"
+        src="/gasygo/gas-cylinders-in-a-row.jpg"
         alt="A collection of various branded gas cylinders like K-Gas, Afrigas, and Totalgaz"
         fill
         className="object-cover"

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShoppingCart, Truck, Users, MoreHorizontal, Loader2 } from 'lucide-react';
+import { DollarSign, ShoppingCart, Truck, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -50,7 +50,7 @@ export default function DashboardPage() {
             <StatCard title="Total Revenue" value="Ksh 125,340" icon={<DollarSign />} note="+20.1% from last month" />
             <StatCard title="Total Orders" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : totalOrders.toString()} icon={<ShoppingCart />} note="All time" />
             <StatCard title="Deliveries Pending" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : pendingOrders.toString()} icon={<Truck />} note="Ready for assignment" />
-            <StatCard title="Total Customers" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : newCustomers.toString()} icon={<Users />} note="All time unique customers" />
+            <StatCard title="New Customers" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : newCustomers.toString()} icon={<Users />} note="All time unique customers" />
         </div>
 
         <Card>
@@ -69,7 +69,6 @@ export default function DashboardPage() {
                             <TableHead>Customer</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -85,13 +84,6 @@ export default function DashboardPage() {
                                 </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
-                                <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" asChild>
-                                    <Link href="/dashboard/orders">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Link>
-                                </Button>
-                                </TableCell>
                             </TableRow>
                             ))}
                         </TableBody>

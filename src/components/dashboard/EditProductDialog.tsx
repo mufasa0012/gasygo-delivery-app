@@ -61,6 +61,16 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     },
   });
 
+  const wrappedAction = (formData: FormData) => {
+    // Manually append the image URL to the form data
+    const imageUrl = form.getValues('image');
+    if (imageUrl) {
+        formData.set('image', imageUrl);
+    }
+    formAction(formData);
+  };
+
+
   useEffect(() => {
     if (state.success) {
       toast({
@@ -145,7 +155,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form action={formAction} className="space-y-4 py-4">
+          <form action={wrappedAction} className="space-y-4 py-4">
              {product && <input type="hidden" {...form.register('id')} />}
             <FormField
               control={form.control}

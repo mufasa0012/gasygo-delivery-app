@@ -129,24 +129,22 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
       };
 
       if (product) {
-        // For editing, we wait for the update to finish before closing.
+        // Editing existing product
         const productRef = doc(db, "products", product.id);
         await updateDoc(productRef, productData);
         toast({
           title: "Product Updated!",
           description: `${product.name} has been successfully updated.`,
         });
-        setOpen(false);
       } else {
-        // For adding, we close the dialog immediately for an optimistic UI.
-        setOpen(false);
+        // Adding new product
+        await addDoc(collection(db, "products"), productData);
         toast({
           title: "Product Added!",
           description: `${values.name} has been successfully added.`,
         });
-        // The save operation continues in the background.
-        await addDoc(collection(db, "products"), productData);
       }
+      setOpen(false); // Close dialog on success
     } catch (error) {
       console.error("Error saving product:", error);
       toast({
@@ -212,7 +210,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product Name</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl><Input placeholder="e.g. K-Gas 6kg" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -269,7 +267,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
-                  <FormControl><Textarea {...field} /></FormControl>
+                  <FormControl><Textarea placeholder="Describe the product..." {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -277,7 +275,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
              <DialogFooter>
                 <Button type="submit" disabled={isUploading || isSubmitting}>
                   {(isUploading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save changes
+                  Save Changes
                 </Button>
             </DialogFooter>
           </form>

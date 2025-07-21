@@ -15,30 +15,33 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { Driver } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { User } from '@/lib/types';
 import { useState, useEffect } from 'react';
-import { addDriver } from '@/lib/actions';
+import { addUser } from '@/lib/actions';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  phone: z.string().regex(/^0\d{9}$/, 'Please enter a valid Kenyan phone number.'),
-  vehicle: z.string().min(2, 'Vehicle must be at least 2 characters.'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['admin', 'customer', 'driver']),
 });
 
-interface EditDriverDialogProps {
-  driver?: Driver;
+interface EditUserDialogProps {
+  user?: User;
   children: React.ReactNode;
 }
 
-export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
+export function EditUserDialog({ user, children }: EditUserDialogProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useFormState(addDriver, { success: false });
+  const [state, formAction] = useFormState(addUser, { success: false });
 
   const form = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
-      name: driver?.name || '',
-      phone: driver?.phone || '',
-      vehicle: driver?.vehicle || '',
+      name: user?.name || '',
+      email: user?.email || '',
+      password: '',
+      role: user?.role || 'customer',
     },
   });
 
@@ -51,26 +54,27 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
 
   useEffect(() => {
     if (open) {
-      if (driver) {
-        form.reset(driver);
+      if (user) {
+        form.reset(user);
       } else {
         form.reset({
           name: '',
-          phone: '',
-          vehicle: '',
+          email: '',
+          password: '',
+          role: 'customer',
         });
       }
     }
-  }, [open, driver, form]);
+  }, [open, user, form]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{driver ? 'Edit Driver' : 'Add New Driver'}</DialogTitle>
+          <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
           <DialogDescription>
-            {driver ? 'Update the details for this driver.' : 'Fill in the details for the new driver.'}
+            {user ? 'Update the details for this user.' : 'Fill in the details for the new user.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -90,12 +94,12 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
             />
             <FormField
               control={form.control}
-              name="phone"
-              render={({ field }) => (
+              name="email"
+              render={({ field })_ => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="0712345678" {...field} />
+                    <Input type="email" placeholder="user@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,13 +107,35 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
             />
             <FormField
               control={form.control}
-              name="vehicle"
+              name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Vehicle</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="Toyota Hilux" {...field} />
+                    <Input type="password" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="customer">Customer</SelectItem>
+                      <SelectItem value="driver">Driver</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

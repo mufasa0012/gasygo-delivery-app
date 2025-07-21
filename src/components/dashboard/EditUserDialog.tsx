@@ -1,8 +1,9 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { User } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { addUser } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -34,9 +37,11 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ user, children }: EditUserDialogProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useFormState(addUser, { success: false });
+  const [state, formAction, isPending] = useActionState(addUser, { success: false, message: '' });
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: user?.name || '',
       email: user?.email || '',
@@ -47,10 +52,20 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
 
   useEffect(() => {
     if (state.success) {
+      toast({
+        title: 'User Added!',
+        description: state.message,
+      });
       setOpen(false);
       form.reset();
+    } else if (state.message) {
+      toast({
+        variant: "destructive",
+        title: 'An error occurred',
+        description: state.message,
+      });
     }
-  }, [state.success, form]);
+  }, [state, form, toast]);
 
   useEffect(() => {
     if (open) {
@@ -95,7 +110,7 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
             <FormField
               control={form.control}
               name="email"
-              render={({ field })_ => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
@@ -141,7 +156,10 @@ export function EditUserDialog({ user, children }: EditUserDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

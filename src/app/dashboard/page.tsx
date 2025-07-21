@@ -1,7 +1,7 @@
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Order } from '@/lib/types';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -17,9 +17,12 @@ export default function DashboardPage() {
         query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5))
     );
     const [allOrdersCollection, loadingAll, errorAll] = useCollection(collection(db, "orders"));
+    const [deliveredOrdersCollection, loadingDelivered, errorDelivered] = useCollection(
+        query(collection(db, "orders"), where("status", "==", "Delivered"))
+    );
 
-    const loading = loadingRecent || loadingAll;
-    const error = errorRecent || errorAll;
+    const loading = loadingRecent || loadingAll || loadingDelivered;
+    const error = errorRecent || errorAll || errorDelivered;
 
     const recentOrders: Order[] = recentOrdersCollection?.docs.map(doc => {
         const data = doc.data();
@@ -33,6 +36,7 @@ export default function DashboardPage() {
     const totalOrders = allOrdersCollection?.size ?? 0;
     const pendingOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
     const newCustomers = allOrdersCollection?.docs.map(doc => doc.data().customerPhone).filter((value, index, self) => self.indexOf(value) === index).length ?? 0;
+    const totalRevenue = deliveredOrdersCollection?.docs.reduce((acc, doc) => acc + doc.data().total, 0) ?? 0;
 
   return (
     <div className="space-y-8">
@@ -47,7 +51,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Revenue" value="Ksh 125,340" icon={<DollarSign />} note="+20.1% from last month" />
+            <StatCard title="Total Revenue" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Ksh ${totalRevenue.toLocaleString()}`} icon={<DollarSign />} note="From delivered orders" />
             <StatCard title="Total Orders" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : totalOrders.toString()} icon={<ShoppingCart />} note="All time" />
             <StatCard title="Deliveries Pending" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : pendingOrders.toString()} icon={<Truck />} note="Ready for assignment" />
             <StatCard title="New Customers" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : newCustomers.toString()} icon={<Users />} note="All time unique customers" />

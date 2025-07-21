@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,10 +17,12 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Driver } from '@/lib/types';
-import { useState, useEffect } from 'react';
-import { addDriver } from '@/lib/actions';
+import { addDriver, updateDriver } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   phone: z.string().regex(/^0\d{9}$/, 'Please enter a valid Kenyan phone number.'),
   vehicle: z.string().min(2, 'Vehicle must be at least 2 characters.'),
@@ -33,35 +35,41 @@ interface EditDriverDialogProps {
 
 export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(addDriver, { success: false });
+  const { toast } = useToast();
+  
+  const action = driver ? updateDriver : addDriver;
+  const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: driver?.name || '',
-      phone: driver?.phone || '',
-      vehicle: driver?.vehicle || '',
+    defaultValues: driver ? { ...driver } : {
+      name: '',
+      phone: '',
+      vehicle: '',
     },
   });
 
   useEffect(() => {
     if (state.success) {
+      toast({
+        title: driver ? 'Driver Updated!' : 'Driver Added!',
+        description: state.message,
+      });
       setOpen(false);
       form.reset();
+    } else if (state.message) {
+       toast({
+        variant: "destructive",
+        title: 'An error occurred',
+        description: state.message,
+      });
     }
-  }, [state.success, form]);
+  }, [state, driver, form, toast]);
 
   useEffect(() => {
     if (open) {
-      if (driver) {
-        form.reset(driver);
-      } else {
-        form.reset({
-          name: '',
-          phone: '',
-          vehicle: '',
-        });
-      }
+      // Reset form state when dialog opens
+      form.reset(driver || { name: '', phone: '', vehicle: '' });
     }
   }, [open, driver, form]);
 
@@ -77,6 +85,7 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form action={formAction} className="space-y-4 py-4">
+            {driver && <input type="hidden" {...form.register('id')} />}
             <FormField
               control={form.control}
               name="name"
@@ -117,7 +126,10 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" disabled={isPending}>
+                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

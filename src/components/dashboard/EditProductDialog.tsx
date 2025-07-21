@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react'; // Changed from 'react-dom'
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,20 +19,20 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Product } from '@/lib/types';
-import { useState, useRef, useEffect } from 'react';
 import { Image } from '@imagekit/next';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud } from 'lucide-react';
 import { upload } from '@imagekit/next';
-import { addProduct } from '@/lib/actions';
+import { addProduct, updateProduct } from '@/lib/actions';
 
 const formSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(2, 'Name is too short'),
   category: z.enum(['Gas Cylinder', 'Accessory', 'Full Set']),
   price: z.coerce.number().positive('Price must be a positive number'),
   stock: z.coerce.number().int().min(0, "Stock can't be negative"),
   description: z.string().optional(),
-  image: z.string().url('Invalid image URL'),
+  image: z.string().url('An image URL is required.'),
 });
 
 interface EditProductDialogProps {
@@ -45,26 +45,38 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [state, formAction] = useActionState(addProduct, { success: false }); // Changed useFormState to useActionState
+
+  const action = product ? updateProduct : addProduct;
+  const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: product?.name || '',
-      category: product?.category || 'Gas Cylinder',
-      price: product?.price || 0,
-      stock: product?.stock || 0,
-      description: product?.description || '',
-      image: product?.image || '',
+    defaultValues: product ? { ...product } : {
+      name: '',
+      category: 'Gas Cylinder',
+      price: 0,
+      stock: 0,
+      description: '',
+      image: '',
     },
   });
 
   useEffect(() => {
     if (state.success) {
+      toast({
+        title: product ? 'Product Updated!' : 'Product Added!',
+        description: state.message,
+      });
       setOpen(false);
       form.reset();
+    } else if (state.message) {
+      toast({
+        variant: 'destructive',
+        title: 'An error occurred',
+        description: state.message,
+      });
     }
-  }, [state.success, form]);
+  }, [state, product, form, toast]);
 
   useEffect(() => {
     if (open) {
@@ -101,7 +113,6 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
         file,
         fileName: file.name,
         ...authParams,
-        publicKey: authParams.publicKey,
       });
 
       form.setValue('image', response.url, { shouldValidate: true });
@@ -135,6 +146,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
         </DialogHeader>
         <Form {...form}>
           <form action={formAction} className="space-y-4 py-4">
+             {product && <input type="hidden" {...form.register('id')} />}
             <FormField
               control={form.control}
               name="image"
@@ -262,7 +274,10 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
               )}
             />
             <DialogFooter>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" disabled={isPending || isUploading}>
+                {(isPending || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

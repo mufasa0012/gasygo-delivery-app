@@ -13,18 +13,24 @@ import { DollarSign, ShoppingCart, Truck, Users, MoreHorizontal, Loader2 } from 
 import Link from 'next/link';
 
 export default function DashboardPage() {
-    const [ordersCollection, loading, error] = useCollection(
+    const [recentOrdersCollection, loadingRecent, errorRecent] = useCollection(
         query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5))
     );
+    const [allOrdersCollection, loadingAll, errorAll] = useCollection(collection(db, "orders"));
 
-    const recentOrders: Order[] = ordersCollection?.docs.map(doc => {
+    const loading = loadingRecent || loadingAll;
+    const error = errorRecent || errorAll;
+
+    const recentOrders: Order[] = recentOrdersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt.toDate(), // Convert Firestore Timestamp to Date
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
         } as Order;
     }) || [];
+    
+    const totalOrders = allOrdersCollection?.size ?? 0;
 
   return (
     <div className="space-y-8">
@@ -40,7 +46,7 @@ export default function DashboardPage() {
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard title="Total Revenue" value="Ksh 125,340" icon={<DollarSign />} note="+20.1% from last month" />
-            <StatCard title="Today's Orders" value="23" icon={<ShoppingCart />} note="+15 from yesterday" />
+            <StatCard title="Total Orders" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : totalOrders.toString()} icon={<ShoppingCart />} note="All time" />
             <StatCard title="Deliveries Pending" value="8" icon={<Truck />} note="2 assigned" />
             <StatCard title="New Customers" value="12" icon={<Users />} note="+5 since last week" />
         </div>

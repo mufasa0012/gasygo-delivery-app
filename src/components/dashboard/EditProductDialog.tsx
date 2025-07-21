@@ -75,7 +75,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
         const response = await upload({
             file,
             fileName: file.name,
-            ...authParams,
+            ...authParams, // This now includes token, expire, signature, and publicKey
         });
 
         form.setValue("image", response.url, { shouldValidate: true });

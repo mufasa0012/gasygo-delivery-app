@@ -13,12 +13,12 @@ export async function GET() {
     }
     
     try {
-        const { token, expire, signature } = getUploadAuthParams({
+        const authParams = getUploadAuthParams({
             privateKey: process.env.IMAGEKIT_PRIVATE_KEY as string,
             publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY as string,
         });
 
-        return Response.json({ token, expire, signature });
+        return Response.json(authParams);
 
     } catch (error) {
         console.error("Error generating ImageKit auth params:", error);

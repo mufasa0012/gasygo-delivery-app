@@ -25,7 +25,7 @@ export type Order = {
   paymentMethod: 'M-Pesa' | 'Cash on Delivery';
   deliveryAddress: string;
   driverId?: string;
-  createdAt: Date | Timestamp;
+  createdAt: Date;
 };
 
 export type Customer = {

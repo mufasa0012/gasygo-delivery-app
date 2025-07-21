@@ -3,35 +3,41 @@
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Order } from '@/lib/types';
+import type { Order, Driver } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrdersTable } from "@/components/dashboard/OrdersTable";
 import { Loader2 } from 'lucide-react';
 
 export default function OrdersPage() {
-    const [ordersCollection, loading, error] = useCollection(collection(db, 'orders'));
+    const [ordersCollection, loadingOrders, errorOrders] = useCollection(collection(db, 'orders'));
+    const [driversCollection, loadingDrivers, errorDrivers] = useCollection(collection(db, 'drivers'));
     
     const orders: Order[] = ordersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt.toDate(), // Convert Firestore Timestamp to Date
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(), // Convert Firestore Timestamp to Date
         } as Order;
     }) || [];
+
+    const drivers: Driver[] = driversCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Driver)) || [];
 
     const pendingOrders = orders.filter(o => o.status === 'Pending');
     const inProgressOrders = orders.filter(o => o.status === 'In Progress');
     const deliveredOrders = orders.filter(o => o.status === 'Delivered');
     const declinedOrders = orders.filter(o => o.status === 'Declined');
 
+    const loading = loadingOrders || loadingDrivers;
+    const error = errorOrders || errorDrivers;
+
     if (loading) {
         return <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
     if (error) {
-        return <p className="text-destructive text-center">Error loading orders: {error.message}</p>;
+        return <p className="text-destructive text-center">Error loading data: {error.message}</p>;
     }
 
     return (
@@ -55,7 +61,7 @@ export default function OrdersPage() {
                             <CardDescription>These orders need to be accepted or declined.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <OrdersTable orders={pendingOrders} />
+                            <OrdersTable orders={pendingOrders} drivers={drivers} />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -66,7 +72,7 @@ export default function OrdersPage() {
                             <CardDescription>These orders are currently out for delivery.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <OrdersTable orders={inProgressOrders} />
+                            <OrdersTable orders={inProgressOrders} drivers={drivers} />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -77,7 +83,7 @@ export default function OrdersPage() {
                             <CardDescription>A history of all completed orders.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <OrdersTable orders={deliveredOrders} />
+                            <OrdersTable orders={deliveredOrders} drivers={drivers} />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -88,7 +94,7 @@ export default function OrdersPage() {
                             <CardDescription>A history of all declined orders.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <OrdersTable orders={declinedOrders} />
+                            <OrdersTable orders={declinedOrders} drivers={drivers} />
                         </CardContent>
                     </Card>
                 </TabsContent>

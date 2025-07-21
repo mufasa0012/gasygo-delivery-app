@@ -8,16 +8,17 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FlameKindling, LayoutDashboard, ShoppingCart, Truck, Package, Users, LogOut, Settings } from 'lucide-react';
+import { FlameKindling, LayoutDashboard, ShoppingCart, Truck, Package, Users, LogOut, Settings, HardHat } from 'lucide-react';
 
 const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard /> },
     { href: '/dashboard/orders', label: 'Orders', icon: <ShoppingCart /> },
     { href: '/dashboard/products', label: 'Products', icon: <Package /> },
-    { href: '/dashboard/drivers', label: 'Drivers', icon: <Truck /> },
+    { href: '/dashboard/drivers', label: 'Drivers', icon: <Users /> },
 ];
 
 export function DashboardSidebar() {
@@ -48,6 +49,17 @@ export function DashboardSidebar() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+        <SidebarSeparator className="my-4" />
+         <SidebarMenu>
+            <SidebarMenuItem>
+                 <SidebarMenuButton asChild tooltip="Driver Dashboard">
+                    <Link href="/driver/dashboard">
+                        <HardHat />
+                        <span>Driver View</span>
+                    </Link>
+                 </SidebarMenuButton>
+            </SidebarMenuItem>
+         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
          <SidebarMenu>

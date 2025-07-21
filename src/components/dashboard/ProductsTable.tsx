@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Product } from "@/lib/types";
-import Image from "next/image";
+import { Image } from "@imagekit/next";
 import { EditProductDialog } from "./EditProductDialog";
 import {
   AlertDialog,

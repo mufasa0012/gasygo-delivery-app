@@ -18,13 +18,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/lib/types";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { db } from "@/lib/firebase";
 import { addDoc, collection, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { IKContext, IKUpload } from 'imagekitio-react';
+import { Loader2, UploadCloud } from "lucide-react";
+import { upload } from "@imagekit/next";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -32,7 +32,7 @@ const formSchema = z.object({
   price: z.coerce.number().positive("Price must be a positive number"),
   stock: z.coerce.number().int().min(0, "Stock can't be negative"),
   description: z.string().optional(),
-  image: z.string().optional(), // Now storing the URL string
+  image: z.string().url("Please upload an image."),
 });
 
 interface EditProductDialogProps {
@@ -44,6 +44,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(product?.image || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,35 +58,46 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
       image: product?.image || "",
     },
   });
-
-  // Set image url in form when it changes
-  useState(() => {
-    form.setValue("image", imageUrl || "");
-  });
   
-  const handleUploadSuccess = (res: any) => {
-    setImageUrl(res.url);
-    form.setValue("image", res.url);
-    setIsSubmitting(false); // Re-enable submit button
-    toast({
-        title: "Image Uploaded!",
-        description: "Your image has been successfully uploaded.",
-    });
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsSubmitting(true);
+    
+    try {
+        const authResponse = await fetch('/api/imagekit/auth');
+        if (!authResponse.ok) {
+            throw new Error('Failed to get authentication parameters');
+        }
+        const authParams = await authResponse.json();
+
+        const response = await upload({
+            file,
+            fileName: file.name,
+            ...authParams,
+            publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+        });
+
+        setImageUrl(response.url);
+        form.setValue("image", response.url, { shouldValidate: true });
+        toast({
+            title: "Image Uploaded!",
+            description: "Your image has been successfully uploaded.",
+        });
+
+    } catch (error) {
+        console.error("Upload error:", error);
+        toast({
+          variant: "destructive",
+          title: "Oh no! Image upload failed.",
+          description: "There was a problem uploading your image. Please try again.",
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
-  const handleUploadError = (err: any) => {
-    console.error("Upload error:", err);
-    setIsSubmitting(false); // Re-enable submit button
-    toast({
-      variant: "destructive",
-      title: "Oh no! Image upload failed.",
-      description: "There was a problem uploading your image. Please try again.",
-    });
-  };
-
-  const handleUploadStart = () => {
-    setIsSubmitting(true); // Disable submit button during upload
-  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -96,18 +108,8 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
         price: values.price,
         stock: values.stock,
         description: values.description || "",
-        image: imageUrl, // Use the state variable which holds the new URL
+        image: values.image,
       };
-
-      if (!productData.image) {
-        toast({
-            variant: "destructive",
-            title: "Image is required",
-            description: "Please upload an image for the product.",
-        });
-        setIsSubmitting(false);
-        return;
-      }
 
       if (product) {
         const productRef = doc(db, "products", product.id);
@@ -125,8 +127,11 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
         form.reset();
         setImageUrl(null);
       }
-
+      
+      // Manually trigger revalidation if needed
+      // revalidatePath('/dashboard/products');
       setOpen(false);
+
     } catch (error) {
       console.error("Error saving product:", error);
       toast({
@@ -149,32 +154,39 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
             {product ? "Update the details of this product." : "Fill in the details for the new product."}
           </DialogDescription>
         </DialogHeader>
-        <IKContext 
-            publicKey={process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY} 
-            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-            authenticator={async () => {
-                const response = await fetch('/api/imagekit/auth');
-                return await response.json();
-            }}
-        >
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-             <FormItem>
-                <FormLabel>Product Image</FormLabel>
-                <div className="flex items-center gap-4">
-                    {imageUrl && <Image src={imageUrl} alt="Product preview" width={64} height={64} className="rounded-md object-cover" />}
-                    <FormControl>
-                        <IKUpload
-                            fileName="product-image.jpg"
-                            onUploadStart={handleUploadStart}
-                            onSuccess={handleUploadSuccess}
-                            onError={handleUploadError}
-                            className="bg-primary text-primary-foreground h-10 px-4 py-2 inline-flex items-center justify-center rounded-md text-sm font-medium"
-                        />
-                    </FormControl>
-                </div>
-                <FormMessage />
-            </FormItem>
+             <FormField
+                control={form.control}
+                name="image"
+                render={() => (
+                    <FormItem>
+                        <FormLabel>Product Image</FormLabel>
+                        <div className="flex items-center gap-4">
+                            <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-secondary">
+                                {imageUrl ? 
+                                    <Image src={imageUrl} alt="Product preview" width={96} height={96} className="rounded-md object-cover" /> :
+                                    <span className="text-xs text-muted-foreground">Preview</span>
+                                }
+                            </div>
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                <UploadCloud className="mr-2 h-4 w-4" />
+                                Upload Image
+                            </Button>
+                            <FormControl>
+                                <Input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    onChange={handleImageUpload}
+                                    accept="image/png, image/jpeg, image/webp"
+                                />
+                            </FormControl>
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
             
             <FormField
               control={form.control}
@@ -252,7 +264,6 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
             </DialogFooter>
           </form>
         </Form>
-        </IKContext>
       </DialogContent>
     </Dialog>
   );

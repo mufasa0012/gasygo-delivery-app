@@ -59,19 +59,20 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     },
   });
 
-  // When opening the dialog, if we are NOT editing a product, reset the form.
   useEffect(() => {
-    if (open && !product) {
-      form.reset({
-        name: "",
-        category: "Gas Cylinder",
-        price: 0,
-        stock: 0,
-        description: "",
-        image: "",
-      });
-    } else if (open && product) {
-      form.reset(product);
+    if (open) {
+        if (product) {
+            form.reset(product);
+        } else {
+            form.reset({
+                name: "",
+                category: "Gas Cylinder",
+                price: 0,
+                stock: 0,
+                description: "",
+                image: "",
+            });
+        }
     }
   }, [open, product, form]);
   
@@ -93,6 +94,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
             file,
             fileName: file.name,
             ...authParams,
+            publicKey: authParams.publicKey,
         });
 
         form.setValue("image", response.url, { shouldValidate: true });
@@ -127,22 +129,24 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
       };
 
       if (product) {
+        // For editing, we wait for the update to finish before closing.
         const productRef = doc(db, "products", product.id);
         await updateDoc(productRef, productData);
         toast({
           title: "Product Updated!",
           description: `${product.name} has been successfully updated.`,
         });
+        setOpen(false);
       } else {
-        await addDoc(collection(db, "products"), productData);
+        // For adding, we close the dialog immediately for an optimistic UI.
+        setOpen(false);
         toast({
           title: "Product Added!",
           description: `${values.name} has been successfully added.`,
         });
+        // The save operation continues in the background.
+        await addDoc(collection(db, "products"), productData);
       }
-      
-      setOpen(false);
-
     } catch (error) {
       console.error("Error saving product:", error);
       toast({

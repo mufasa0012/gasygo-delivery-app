@@ -18,20 +18,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductsTableProps {
     products: Product[];
 }
 
 export function ProductsTable({ products }: ProductsTableProps) {
+    const { toast } = useToast();
+
     if (products.length === 0) {
         return <p className="text-muted-foreground text-center">No products found.</p>
     }
 
-    const handleDelete = (productId: string) => {
-        console.log("Deleting product:", productId);
-        // Here you would call your API to delete the product
+    const handleDelete = async (product: Product) => {
+        try {
+            await deleteDoc(doc(db, "products", product.id));
+            toast({
+                title: "Product Deleted",
+                description: `"${product.name}" has been successfully deleted.`
+            });
+            // Note: You'll need to re-fetch or optimistically update the UI
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            toast({
+                variant: "destructive",
+                title: "Deletion Failed",
+                description: "There was a problem deleting the product."
+            });
+        }
     }
 
     return (
@@ -50,7 +68,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 {products.map((product) => (
                     <TableRow key={product.id}>
                         <TableCell>
-                            <Image src={product.image} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
+                            <Image src={product.image || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
                         </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell><Badge variant="outline">{product.category}</Badge></TableCell>
@@ -88,7 +106,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(product.id)}>Continue</AlertDialogAction>
+                                    <AlertDialogAction onClick={() => handleDelete(product)}>Continue</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

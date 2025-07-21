@@ -1,16 +1,16 @@
 import type { Product, Order } from './types';
 
 export const products: Product[] = [
-  { id: '1', name: 'K-Gas 6kg', category: 'Gas Cylinder', price: 1200, stock: 50, image: 'https://placehold.co/400x400.png', description: 'Reliable 6kg K-Gas cylinder for your cooking needs.' },
-  { id: '2', name: 'K-Gas 13kg', category: 'Gas Cylinder', price: 2500, stock: 30, image: 'https://placehold.co/400x400.png', description: 'Larger 13kg K-Gas cylinder for extended use.' },
-  { id: '3', name: 'Total Gas 6kg', category: 'Gas Cylinder', price: 1250, stock: 45, image: 'https://placehold.co/400x400.png', description: '6kg Total Gas cylinder, a trusted brand.' },
-  { id: '4', name: 'Total Gas 13kg', category: 'Gas Cylinder', price: 2600, stock: 25, image: 'https://placehold.co/400x400.png', description: '13kg Total Gas cylinder for heavy users.' },
-  { id: '5', name: 'Afrigas 6kg', category: 'Gas Cylinder', price: 1150, stock: 60, image: 'https://placehold.co/400x400.png', description: 'Affordable and reliable 6kg Afrigas cylinder.' },
-  { id: '6', name: 'DrachenGas 13kg', category: 'Gas Cylinder', price: 2550, stock: 20, image: 'https://placehold.co/400x400.png', description: 'Premium 13kg DrachenGas cylinder.' },
-  { id: '7', name: 'Gas Regulator', category: 'Accessory', price: 800, stock: 100, image: 'https://firebasestorage.googleapis.com/v0/b/app-hosting-project.appspot.com/o/images%2Fckpu86sg000003e67m3u05c3t?alt=media&token=81a79883-93d3-4903-bb6f-998845184288', description: 'High-quality gas regulator for safety.' },
-  { id: '8', name: 'Hosepipe', category: 'Accessory', price: 300, stock: 150, image: 'https://placehold.co/400x400.png', description: 'Durable gas hosepipe, 1.5m length.' },
-  { id: '9', name: 'Gas Lighter', category: 'Accessory', price: 150, stock: 200, image: 'https://placehold.co/400x400.png', description: 'Easy-to-use gas lighter.' },
-  { id: '10', name: 'Portable Grill', category: 'Accessory', price: 3500, stock: 15, image: 'https://placehold.co/400x400.png', description: 'Compact grill for outdoor cooking.' },
+  { id: '1', name: 'K-Gas 6kg', category: 'Gas Cylinder', price: 1200, stock: 50, image: '/gasygo/k-gas-6kg.jpg', description: 'Reliable 6kg K-Gas cylinder for your cooking needs.' },
+  { id: '2', name: 'K-Gas 13kg', category: 'Gas Cylinder', price: 2500, stock: 30, image: '/gasygo/k-gas-13kg.jpg', description: 'Larger 13kg K-Gas cylinder for extended use.' },
+  { id: '3', name: 'Total Gas 6kg', category: 'Gas Cylinder', price: 1250, stock: 45, image: '/gasygo/total-gas-6kg.jpg', description: '6kg Total Gas cylinder, a trusted brand.' },
+  { id: '4', name: 'Total Gas 13kg', category: 'Gas Cylinder', price: 2600, stock: 25, image: '/gasygo/total-gas-13kg.jpg', description: '13kg Total Gas cylinder for heavy users.' },
+  { id: '5', name: 'Afrigas 6kg', category: 'Gas Cylinder', price: 1150, stock: 60, image: '/gasygo/afrigas-6kg.png', description: 'Affordable and reliable 6kg Afrigas cylinder.' },
+  { id: '6', name: 'DrachenGas 13kg', category: 'Gas Cylinder', price: 2550, stock: 20, image: '/gasygo/drachen-gas-13kg.jpg', description: 'Premium 13kg DrachenGas cylinder.' },
+  { id: '7', name: 'Gas Regulator', category: 'Accessory', price: 800, stock: 100, image: '/gasygo/regulator.jpg', description: 'High-quality gas regulator for safety.' },
+  { id: '8', name: 'Hosepipe', category: 'Accessory', price: 300, stock: 150, image: '/gasygo/hosepipe.jpg', description: 'Durable gas hosepipe, 1.5m length.' },
+  { id: '9', name: 'Gas Lighter', category: 'Accessory', price: 150, stock: 200, image: '/gasygo/lighter.png', description: 'Easy-to-use gas lighter.' },
+  { id: '10', name: 'Portable Grill', category: 'Accessory', price: 3500, stock: 15, image: '/gasygo/grill.jpg', description: 'Compact grill for outdoor cooking.' },
 ];
 
 export const orders: Order[] = [

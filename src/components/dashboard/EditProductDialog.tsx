@@ -19,9 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/lib/types";
 import { useState, useRef } from "react";
-import Image from "next/image";
+import { Image } from "@imagekit/next";
 import { db } from "@/lib/firebase";
-import { addDoc, collection, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UploadCloud } from "lucide-react";
 import { upload } from "@imagekit/next";
@@ -42,8 +42,8 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ product, children }: EditProductDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(product?.image || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -63,7 +63,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsSubmitting(true);
+    setIsUploading(true);
     
     try {
         const authResponse = await fetch('/api/imagekit/auth');
@@ -76,10 +76,8 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
             file,
             fileName: file.name,
             ...authParams,
-            publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
         });
 
-        setImageUrl(response.url);
         form.setValue("image", response.url, { shouldValidate: true });
         toast({
             title: "Image Uploaded!",
@@ -94,7 +92,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
           description: "There was a problem uploading your image. Please try again.",
         });
     } finally {
-        setIsSubmitting(false);
+        setIsUploading(false);
     }
   };
 
@@ -124,8 +122,14 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
           title: "Product Added!",
           description: `${values.name} has been successfully added.`,
         });
-        form.reset();
-        setImageUrl(null);
+        form.reset({
+          name: "",
+          category: "Gas Cylinder",
+          price: 0,
+          stock: 0,
+          description: "",
+          image: "",
+        });
       }
       
       // Manually trigger revalidation if needed
@@ -144,6 +148,8 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     }
   };
   
+  const imageUrl = form.watch("image");
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -165,13 +171,13 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
                         <div className="flex items-center gap-4">
                             <div className="w-24 h-24 rounded-md border border-dashed flex items-center justify-center bg-secondary">
                                 {imageUrl ? 
-                                    <Image src={imageUrl} alt="Product preview" width={96} height={96} className="rounded-md object-cover" /> :
+                                    <Image urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!} src={imageUrl} alt="Product preview" width={96} height={96} className="rounded-md object-cover" /> :
                                     <span className="text-xs text-muted-foreground">Preview</span>
                                 }
                             </div>
-                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                                <UploadCloud className="mr-2 h-4 w-4" />
-                                Upload Image
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+                                Upload
                             </Button>
                             <FormControl>
                                 <Input 
@@ -180,6 +186,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
                                     className="hidden" 
                                     onChange={handleImageUpload}
                                     accept="image/png, image/jpeg, image/webp"
+                                    disabled={isUploading}
                                 />
                             </FormControl>
                         </div>
@@ -257,8 +264,8 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
               )}
             />
              <DialogFooter>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={isUploading || isSubmitting}>
+                  {(isUploading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save changes
                 </Button>
             </DialogFooter>

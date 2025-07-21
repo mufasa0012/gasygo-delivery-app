@@ -1,14 +1,38 @@
+'use client';
+
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrdersTable } from "@/components/dashboard/OrdersTable";
-import { orders } from "@/lib/data";
+import { Loader2 } from 'lucide-react';
 
 export default function OrdersPage() {
+    const [ordersCollection, loading, error] = useCollection(collection(db, 'orders'));
+    
+    const orders: Order[] = ordersCollection?.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt.toDate(), // Convert Firestore Timestamp to Date
+        } as Order;
+    }) || [];
 
     const pendingOrders = orders.filter(o => o.status === 'Pending');
     const inProgressOrders = orders.filter(o => o.status === 'In Progress');
     const deliveredOrders = orders.filter(o => o.status === 'Delivered');
     const declinedOrders = orders.filter(o => o.status === 'Declined');
+
+    if (loading) {
+        return <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    }
+
+    if (error) {
+        return <p className="text-destructive text-center">Error loading orders: {error.message}</p>;
+    }
 
     return (
         <div className="space-y-8">

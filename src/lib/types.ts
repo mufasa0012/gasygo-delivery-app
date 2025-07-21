@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type Product = {
   id: string;
   name: string;
@@ -23,7 +25,7 @@ export type Order = {
   paymentMethod: 'M-Pesa' | 'Cash on Delivery';
   deliveryAddress: string;
   driverId?: string;
-  createdAt: Date;
+  createdAt: Date | Timestamp;
 };
 
 export type Customer = {

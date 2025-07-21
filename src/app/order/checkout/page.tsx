@@ -1,14 +1,32 @@
+'use client';
+
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { CheckoutForm } from "@/components/order/CheckoutForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { products } from "@/lib/data";
+import type { Product } from '@/lib/types';
 
-const mockCart = [
-    { product: products[0], quantity: 1 },
-    { product: products[7], quantity: 1 },
-];
-const mockTotal = mockCart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+// This is a temporary mock cart. In a real app, this would come from a global state (Context, Redux, etc.)
+// For now, we'll just show the first two products from the database in the summary.
+const mockCartIds = ['1', '8']; // K-Gas 6kg and Hosepipe from the old data.ts
 
 export default function CheckoutPage() {
+    const [productsCollection] = useCollection(collection(db, 'products'));
+    
+    const allProducts: Product[] = productsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)) || [];
+    
+    // Create a mock cart from the first two products for demonstration
+    const mockCart = allProducts.length > 1 
+        ? [
+            { product: allProducts[0], quantity: 1 },
+            { product: allProducts[1], quantity: 1 },
+          ] 
+        : [];
+        
+    const mockTotal = mockCart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+
+
     return (
         <div className="container mx-auto max-w-7xl px-4 py-12 md:py-16">
             <div className="text-center mb-12">

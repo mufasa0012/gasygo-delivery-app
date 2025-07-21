@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { products } from '@/lib/data';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { Product, CartItem } from '@/lib/types';
 import { ProductCard } from '@/components/shared/ProductCard';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +11,15 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { MinusCircle, PlusCircle, ShoppingCart, X } from 'lucide-react';
+import { MinusCircle, PlusCircle, ShoppingCart, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export function ProductGrid() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  
+  const [productsCollection, loading, error] = useCollection(collection(db, 'products'));
+  const products: Product[] = productsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)) || [];
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -52,10 +57,16 @@ export function ProductGrid() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-      <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
-        ))}
+      <div className="lg:col-span-3">
+        {loading && <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+        {error && <p className="text-destructive text-center">Error: {error.message}</p>}
+        {!loading && !error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {products.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+            ))}
+            </div>
+        )}
       </div>
 
       <div className="lg:col-span-1 sticky top-24">

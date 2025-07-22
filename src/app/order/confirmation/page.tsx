@@ -1,45 +1,47 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 function ConfirmationContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const orderId = searchParams.get('orderId');
+
+    // This page is now a transitional page. We redirect to the new status page.
+    useEffect(() => {
+        if (orderId) {
+            // Clear the cart from localStorage here as a final step.
+            localStorage.removeItem('gasygo-cart');
+            router.replace(`/order/status/${orderId}`);
+        }
+    }, [orderId, router]);
+
+
+    if (!orderId) {
+         return (
+             <div className="text-center space-y-4">
+                <h2 className="text-2xl font-semibold">Generating your order...</h2>
+                 <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary"/>
+                <p className="text-muted-foreground">Please wait while we create your order tracking page.</p>
+            </div>
+         )
+    }
 
     return (
         <Card className="w-full text-center shadow-xl">
             <CardHeader className="items-center">
                 <CheckCircle2 className="h-20 w-20 text-green-500 mb-4" />
-                <CardTitle className="font-headline text-3xl">Thank You for Your Order!</CardTitle>
-                <CardDescription className="max-w-md">Your order has been received and is now being processed. You will receive an SMS/WhatsApp confirmation shortly.</CardDescription>
+                <CardTitle className="font-headline text-3xl">Order Placed Successfully!</CardTitle>
+                <CardDescription className="max-w-md">Redirecting you to your order tracking page...</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="text-left bg-secondary p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">What Happens Next?</h3>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                        <li>Order Number: 
-                            <span className="font-mono bg-background px-2 py-1 rounded">
-                                {orderId ? `GGO-${orderId.substring(0,6).toUpperCase()}` : <Loader2 className="inline-block h-4 w-4 animate-spin"/>}
-                            </span>
-                        </li>
-                        <li>Estimated Delivery: <span className="font-semibold">30-60 minutes</span></li>
-                        <li>You will be notified when a driver is assigned.</li>
-                        <li>Prepare payment upon delivery if you chose Cash/M-Pesa.</li>
-                    </ul>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                    <Button asChild>
-                        <Link href="/">Back to Home</Link>
-                    </Button>
-                     <Button variant="outline" asChild>
-                        <Link href="/contact">Contact Support</Link>
-                    </Button>
-                </div>
+            <CardContent>
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto"/>
             </CardContent>
         </Card>
     );

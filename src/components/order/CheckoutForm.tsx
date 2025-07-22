@@ -69,7 +69,7 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
                 customerName: values.name,
                 customerPhone: values.phone,
                 deliveryAddress: `${values.address}, ${values.apartment || ''}, near ${values.landmark || ''}`.trim(),
-                items: cart,
+                items: cart.map(item => ({...item, product: {...item.product}})), // de-proxify product
                 total: total,
                 status: 'Pending',
                 paymentMethod: values.paymentMethod === 'mpesa' ? 'M-Pesa' : 'Cash on Delivery',
@@ -84,11 +84,12 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
 
             const docRef = await addDoc(collection(db, "orders"), orderData);
 
-            localStorage.removeItem('gasygo-cart');
+            // We no longer remove the cart here. It will be removed on the confirmation page
+            // to ensure it persists if the user navigates back.
 
             toast({
                 title: "Order Placed!",
-                description: "Your order has been successfully submitted."
+                description: "Redirecting to your order status page."
             });
             
             router.push(`/order/confirmation?orderId=${docRef.id}`);

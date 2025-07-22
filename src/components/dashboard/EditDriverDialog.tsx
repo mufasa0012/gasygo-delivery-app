@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,9 +36,10 @@ interface EditDriverDialogProps {
 export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  
+  const [isPending, startTransition] = useTransition();
+
   const action = driver ? updateDriver : addDriver;
-  const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
+  const [state, formAction] = useActionState(action, { success: false, message: '' });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,7 +57,9 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
         formData.append(key, String(value));
       }
     });
-    formAction(formData);
+    startTransition(() => {
+        formAction(formData);
+    })
   };
 
   useEffect(() => {
@@ -67,14 +70,14 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
       });
       setOpen(false);
       form.reset();
-    } else if (state.message && !state.success) {
+    } else if (form.formState.isSubmitSuccessful && state.message && !state.success) {
        toast({
         variant: "destructive",
         title: 'An error occurred',
         description: state.message,
       });
     }
-  }, [state, driver, form, toast]);
+  }, [state, driver, form, toast, form.formState.isSubmitSuccessful]);
 
   useEffect(() => {
     if (open) {

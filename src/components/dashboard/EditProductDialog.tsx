@@ -45,10 +45,10 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [_, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const action = product ? updateProduct : addProduct;
-  const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
+  const [state, formAction] = useActionState(action, { success: false, message: '' });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,21 +77,21 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
 
 
   useEffect(() => {
-    if (state.success) {
+    if (form.formState.isSubmitSuccessful && state.success) {
       toast({
         title: product ? 'Product Updated!' : 'Product Added!',
         description: state.message,
       });
       setOpen(false);
       form.reset();
-    } else if (state.message) {
+    } else if (form.formState.isSubmitSuccessful && state.message && !state.success) {
       toast({
         variant: 'destructive',
         title: 'An error occurred',
         description: state.message,
       });
     }
-  }, [state, product, form, toast]);
+  }, [state, product, form, toast, form.formState.isSubmitSuccessful]);
 
   useEffect(() => {
     if (open) {

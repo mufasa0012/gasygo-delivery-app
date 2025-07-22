@@ -43,6 +43,7 @@ export type Driver = {
   name: string;
   phone: string;
   vehicle: string;
+  available: boolean;
 };
 
 export type User = {

@@ -1,5 +1,6 @@
 import { ProductGrid } from '@/components/order/ProductGrid';
 import { CartSidebar } from '@/components/order/CartSidebar';
+import { MobileCartDrawer } from '@/components/order/MobileCartDrawer';
 
 export default function OrderPage() {
   return (
@@ -12,9 +13,12 @@ export default function OrderPage() {
             <div className="lg:col-span-3">
                 <ProductGrid />
             </div>
-            <div className="lg:col-span-1 sticky top-24">
+            <div className="lg:col-span-1 sticky top-24 hidden lg:block">
                 <CartSidebar />
             </div>
+        </div>
+        <div className="lg:hidden">
+          <MobileCartDrawer />
         </div>
     </div>
   );

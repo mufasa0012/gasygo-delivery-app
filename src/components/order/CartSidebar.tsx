@@ -33,6 +33,7 @@ export function CartSidebar() {
       setCart(newCart);
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+        window.dispatchEvent(new Event('storage')); // Notify other components of cart changes
       } catch (error) {
         console.error("Failed to save cart to localStorage", error);
       }
@@ -51,6 +52,7 @@ export function CartSidebar() {
         
         try {
             localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+            window.dispatchEvent(new Event('storage'));
         } catch (error) {
             console.error("Failed to save cart to localStorage", error);
         }
@@ -91,8 +93,24 @@ export function CartSidebar() {
 
     document.addEventListener('addToCart', handleAddToCartEvent);
 
+    const handleStorageChange = () => {
+        try {
+            const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+            if (storedCart) {
+                setCart(JSON.parse(storedCart));
+            } else {
+                setCart([]);
+            }
+        } catch (error) {
+            console.error("Failed to parse cart from localStorage", error);
+        }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+
     return () => {
       document.removeEventListener('addToCart', handleAddToCartEvent);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [handleAddToCart]);
 
@@ -138,7 +156,7 @@ export function CartSidebar() {
                 <span>Ksh {cartTotal.toLocaleString()}</span>
             </div>
           <Button asChild className="w-full" size="lg">
-            <Link href="/order/checkout">Proceed to Checkout</Link>
+            <Link href="/order/checkout">Place Order</Link>
           </Button>
         </CardFooter>
       )}

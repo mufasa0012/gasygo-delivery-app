@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -36,15 +37,23 @@ export default function DriverDashboardPage() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [assignedOrdersCollection, loading, error] = useCollection(
+    const [activeOrdersCollection, loadingActive, errorActive] = useCollection(
         query(
             collection(db, "orders"), 
             where("assignedDriverId", "==", CURRENT_DRIVER_ID), 
-            where("status", "in", ["In Progress", "Delivered"])
+            where("status", "==", "In Progress")
+        )
+    );
+
+    const [deliveredOrdersCollection, loadingDelivered, errorDelivered] = useCollection(
+        query(
+            collection(db, "orders"),
+            where("assignedDriverId", "==", CURRENT_DRIVER_ID),
+            where("status", "==", "Delivered")
         )
     );
     
-    const orders: Order[] = assignedOrdersCollection?.docs.map(doc => {
+    const activeOrders: Order[] = activeOrdersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
@@ -53,8 +62,11 @@ export default function DriverDashboardPage() {
         } as Order;
     }) || [];
 
-    const activeOrders = orders.filter(o => o.status === 'In Progress');
-    const todaysDeliveries = orders.filter(o => o.status === 'Delivered' && format(o.createdAt, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length;
+    const todaysDeliveries = deliveredOrdersCollection?.docs.filter(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate ? (data.createdAt as Timestamp).toDate() : new Date();
+        return format(createdAt, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+    }).length || 0;
 
 
     const handleStatusUpdate = async (orderId: string, newStatus: 'Delivered' | 'Declined') => {
@@ -74,6 +86,9 @@ export default function DriverDashboardPage() {
         }
         setIsSubmitting(false);
     }
+
+    const loading = loadingActive || loadingDelivered;
+    const error = errorActive || errorDelivered;
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;

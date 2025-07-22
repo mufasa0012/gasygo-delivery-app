@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import { ImageKitProvider } from '@imagekit/next';
 
 export const metadata: Metadata = {

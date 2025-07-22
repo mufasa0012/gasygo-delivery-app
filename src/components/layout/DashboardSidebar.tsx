@@ -19,6 +19,7 @@ const menuItems = [
     { href: '/dashboard/orders', label: 'Orders', icon: <ShoppingCart /> },
     { href: '/dashboard/products', label: 'Products', icon: <Package /> },
     { href: '/dashboard/drivers', label: 'Drivers', icon: <Users /> },
+    { href: '/dashboard/users', label: 'Users', icon: <Users /> },
     { href: '/dashboard/settings', label: 'Settings', icon: <Settings /> },
 ];
 
@@ -66,7 +67,7 @@ export function DashboardSidebar() {
          <SidebarMenu>
             <SidebarMenuItem>
                  <SidebarMenuButton asChild tooltip="Log Out">
-                    <Link href="/">
+                    <Link href="/login">
                         <LogOut />
                         <span>Log Out</span>
                     </Link>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { FlameKindling, LayoutDashboard, Menu } from 'lucide-react';
+import { FlameKindling, LogIn, Menu } from 'lucide-react';
 import { useState } from 'react';
 
 export function Header() {
@@ -33,8 +33,8 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          <Link href="/dashboard" className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">
-             <LayoutDashboard className="h-5 w-5" />
+          <Link href="/login" className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">
+             <LogIn className="h-5 w-5" />
           </Link>
         </nav>
 
@@ -61,9 +61,9 @@ export function Header() {
                     {link.label}
                   </Link>
                 ))}
-                 <Link href="/dashboard" onClick={handleLinkClick} className="text-lg font-medium flex items-center gap-2">
-                    <LayoutDashboard className="h-5 w-5" />
-                    Dashboard
+                 <Link href="/login" onClick={handleLinkClick} className="text-lg font-medium flex items-center gap-2">
+                    <LogIn className="h-5 w-5" />
+                    Login
                 </Link>
               </nav>
             </SheetContent>

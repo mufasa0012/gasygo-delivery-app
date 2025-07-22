@@ -14,10 +14,16 @@ import {
 } from '@/components/ui/table';
 
 async function getUsers() {
-  const usersCol = collection(db, 'users');
-  const userSnapshot = await getDocs(usersCol);
-  const userList = userSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as User[];
-  return userList;
+  try {
+    const usersCol = collection(db, 'users');
+    const userSnapshot = await getDocs(usersCol);
+    const userList = userSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as User[];
+    return userList;
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+    // In a real app, you might want to handle this error more gracefully
+    return [];
+  }
 }
 
 export default async function UsersPage() {
@@ -26,7 +32,10 @@ export default async function UsersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Users</h1>
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Users</h1>
+            <p className="text-muted-foreground">Manage user accounts and roles.</p>
+        </div>
         <EditUserDialog>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -48,7 +57,7 @@ export default async function UsersPage() {
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell className="capitalize">{user.role}</TableCell>
               </TableRow>
             ))}
           </TableBody>

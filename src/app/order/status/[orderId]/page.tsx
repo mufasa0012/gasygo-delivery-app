@@ -32,14 +32,15 @@ function getStatusIndex(status: Order['status']) {
 }
 
 export default function OrderStatusPage({ params }: { params: { orderId: string } }) {
+  const { orderId } = params;
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderDoc, loading, error] = useDocument(doc(db, 'orders', params.orderId));
+  const [orderDoc, loading, error] = useDocument(doc(db, 'orders', orderId));
   const order = orderDoc?.data() as Order;
 
   const handleConfirmDelivery = async () => {
     setIsSubmitting(true);
-    const result = await updateOrderStatus(params.orderId, 'Delivered');
+    const result = await updateOrderStatus(orderId, 'Delivered');
     if (result.success) {
       toast({
         title: 'Delivery Confirmed!',
@@ -109,7 +110,7 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
         <Card className="w-full shadow-xl">
             <CardHeader className="text-center">
                  <CardTitle className="font-headline text-3xl">Tracking Your Order</CardTitle>
-                 <CardDescription>Order ID: <span className="font-mono bg-secondary px-2 py-1 rounded">{params.orderId.substring(0, 8)}...</span></CardDescription>
+                 <CardDescription>Order ID: <span className="font-mono bg-secondary px-2 py-1 rounded">{orderId.substring(0, 8)}...</span></CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
                 {/* Progress Bar */}

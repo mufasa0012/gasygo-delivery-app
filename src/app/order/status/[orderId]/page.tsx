@@ -6,7 +6,7 @@ import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { CheckCircle2, Loader2, Package, Truck, PartyPopper, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Loader2, Package, Truck, PartyPopper, AlertTriangle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Order } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/actions';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Image } from '@imagekit/next';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 const statusSteps = [
   { status: 'Pending', label: 'Order Placed', icon: <Package className="h-6 w-6" /> },
@@ -38,18 +40,18 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
   const [orderDoc, loading, error] = useDocument(doc(db, 'orders', orderId));
   const order = orderDoc?.data() as Order;
 
-  const handleConfirmDelivery = async () => {
+  const handleStatusUpdate = async (newStatus: 'Delivered' | 'Declined') => {
     setIsSubmitting(true);
-    const result = await updateOrderStatus(orderId, 'Delivered');
+    const result = await updateOrderStatus(orderId, newStatus);
     if (result.success) {
       toast({
-        title: 'Delivery Confirmed!',
-        description: 'Thank you for your order.',
+        title: newStatus === 'Delivered' ? 'Delivery Confirmed!' : 'Order Cancelled',
+        description: result.message,
       });
     } else {
       toast({
         variant: 'destructive',
-        title: 'Confirmation Failed',
+        title: 'Action Failed',
         description: result.message,
       });
     }
@@ -102,6 +104,31 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
         </div>
       )
   }
+
+   if (order.status === 'Declined') {
+      return (
+         <div className="container mx-auto max-w-3xl px-4 py-12 md:py-24 flex items-center justify-center">
+            <Card className="w-full text-center shadow-xl">
+                <CardHeader className="items-center">
+                    <XCircle className="h-20 w-20 text-destructive mb-4" />
+                    <CardTitle className="font-headline text-3xl">Order Cancelled</CardTitle>
+                    <CardDescription className="max-w-md">This order has been cancelled. If this was a mistake, please contact support or place a new order.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                        <Button asChild>
+                            <Link href="/">Back to Home</Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href="/order">Place New Order</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      )
+  }
+
 
   const currentStatusIndex = getStatusIndex(order.status);
   const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
@@ -175,12 +202,37 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
                     <Button 
                         size="lg" 
                         className="w-full font-bold text-lg bg-green-600 hover:bg-green-700"
-                        onClick={handleConfirmDelivery}
+                        onClick={() => handleStatusUpdate('Delivered')}
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
                         Confirm Delivery & Payment
                     </Button>
+                </CardFooter>
+            )}
+             {order.status === 'Pending' && (
+                <CardFooter className="flex-col gap-4 border-t pt-6">
+                    <p className="text-sm text-muted-foreground">Need to cancel? You can cancel this order before a driver is assigned.</p>
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="w-full" disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <XCircle className="mr-2 h-4 w-4"/>}
+                                Cancel Order
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently cancel your order.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>No, Keep Order</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleStatusUpdate('Declined')}>Yes, Cancel Order</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </CardFooter>
             )}
         </Card>

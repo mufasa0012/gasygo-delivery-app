@@ -10,10 +10,11 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
 import { Button } from "../ui/button";
-import { Truck } from "lucide-react";
+import { Truck, Loader2 } from "lucide-react";
 import type { Order, Driver } from "@/lib/types";
 import { assignDriver } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface AssignDriverDropdownProps {
     order: Order;
@@ -22,8 +23,10 @@ interface AssignDriverDropdownProps {
 
 export function AssignDriverDropdown({ order, drivers }: AssignDriverDropdownProps) {
     const { toast } = useToast();
+    const [isAssigning, setIsAssigning] = useState(false);
 
     const handleAssignDriver = async (driver: Driver) => {
+        setIsAssigning(true);
         const result = await assignDriver(order.id, driver.id, driver.name);
         if (result.success) {
             toast({
@@ -37,24 +40,29 @@ export function AssignDriverDropdown({ order, drivers }: AssignDriverDropdownPro
                 description: result.message,
             });
         }
+        setIsAssigning(false);
     }
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                    <Truck className="h-4 w-4 mr-2" />
+                <Button variant="ghost" size="sm" disabled={isAssigning}>
+                    {isAssigning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Truck className="h-4 w-4 mr-2" />}
                     Assign
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Assign a Driver</DropdownMenuLabel>
+                <DropdownMenuLabel>Assign an Available Driver</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {drivers.map(driver => (
-                     <DropdownMenuItem key={driver.id} onClick={() => handleAssignDriver(driver)}>
-                        {driver.name}
-                    </DropdownMenuItem>
-                ))}
+                {drivers.length > 0 ? (
+                    drivers.map(driver => (
+                        <DropdownMenuItem key={driver.id} onClick={() => handleAssignDriver(driver)} disabled={isAssigning}>
+                            {driver.name}
+                        </DropdownMenuItem>
+                    ))
+                ) : (
+                    <DropdownMenuItem disabled>No drivers available</DropdownMenuItem>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     )

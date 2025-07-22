@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck } from 'lucide-react';
+import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { AssignDriverDropdown } from '@/components/dashboard/AssignDriverDropdown';
 import { format } from 'date-fns';
@@ -37,8 +37,13 @@ export default function DashboardPage() {
     }) || [];
 
     const drivers: Driver[] = driversCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Driver)) || [];
-    const availableDrivers = drivers.filter(driver => driver.available);
     
+    // Determine driver availability based on assigned 'In Progress' orders
+    const inProgressOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'In Progress').map(doc => doc.data().assignedDriverId) || [];
+    const availableDrivers = drivers.filter(driver => !inProgressOrders.includes(driver.id));
+    const onDeliveryDrivers = drivers.filter(driver => inProgressOrders.includes(driver.id));
+
+
     const totalOrders = allOrdersCollection?.size ?? 0;
     const pendingOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
     const newCustomers = allOrdersCollection?.docs.map(doc => doc.data().customerPhone).filter((value, index, self) => self.indexOf(value) === index).length ?? 0;
@@ -108,7 +113,7 @@ export default function DashboardPage() {
                                     <TableCell>{order.assignedDriver || 'N/A'}</TableCell>
                                     <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
-                                        {order.status === 'Pending' && <AssignDriverDropdown order={order} drivers={drivers} />}
+                                        {order.status === 'Pending' && <AssignDriverDropdown order={order} drivers={availableDrivers} />}
                                     </TableCell>
                                 </TableRow>
                                 ))}
@@ -120,24 +125,38 @@ export default function DashboardPage() {
             </Card>
              <Card>
                 <CardHeader>
-                    <CardTitle>Available Drivers</CardTitle>
-                    <CardDescription>Drivers ready for the next assignment.</CardDescription>
+                    <CardTitle>Driver Status</CardTitle>
+                    <CardDescription>See who is on delivery and who is available.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    {loading && <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
-                    {error && <p className="text-destructive text-center">Error: {error.message}</p>}
-                    {!loading && !error && (
-                        <div className="space-y-4">
-                            {availableDrivers.length > 0 ? availableDrivers.map(driver => (
-                                <div key={driver.id} className="flex items-center justify-between p-2 rounded-md bg-secondary">
+                <CardContent className="space-y-6">
+                    <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><Truck className="mr-2 h-4 w-4" />On Delivery</h3>
+                         {loading && <div className="flex justify-center items-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
+                         <div className="space-y-2">
+                            {onDeliveryDrivers.length > 0 ? onDeliveryDrivers.map(driver => (
+                                <div key={driver.id} className="flex items-center justify-between p-2 rounded-md bg-orange-100 dark:bg-orange-900/50">
                                     <p className="font-medium">{driver.name}</p>
                                     <p className="text-sm text-muted-foreground">{driver.phone}</p>
                                 </div>
                             )) : (
-                                <p className="text-sm text-muted-foreground text-center py-4">No drivers currently available.</p>
+                                <p className="text-xs text-muted-foreground text-center py-2">No drivers are currently on delivery.</p>
                             )}
                         </div>
-                    )}
+                    </div>
+                     <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><UserCheck className="mr-2 h-4 w-4" />Available Drivers</h3>
+                         {loading && <div className="flex justify-center items-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
+                         <div className="space-y-2">
+                            {availableDrivers.length > 0 ? availableDrivers.map(driver => (
+                                <div key={driver.id} className="flex items-center justify-between p-2 rounded-md bg-green-100 dark:bg-green-900/50">
+                                    <p className="font-medium">{driver.name}</p>
+                                    <p className="text-sm text-muted-foreground">{driver.phone}</p>
+                                </div>
+                            )) : (
+                                <p className="text-xs text-muted-foreground text-center py-2">No drivers currently available.</p>
+                            )}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>

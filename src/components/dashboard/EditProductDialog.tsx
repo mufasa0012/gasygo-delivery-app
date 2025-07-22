@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,6 +45,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [_, startTransition] = useTransition();
 
   const action = product ? updateProduct : addProduct;
   const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
@@ -61,13 +62,17 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
     },
   });
 
-  const wrappedAction = (formData: FormData) => {
-    // Manually append the image URL to the form data
-    const imageUrl = form.getValues('image');
-    if (imageUrl) {
-        formData.set('image', imageUrl);
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const formData = new FormData();
+    // Manually construct FormData from react-hook-form values
+    for (const [key, value] of Object.entries(values)) {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value.toString());
+      }
     }
-    formAction(formData);
+    startTransition(() => {
+        formAction(formData);
+    });
   };
 
 
@@ -155,7 +160,7 @@ export function EditProductDialog({ product, children }: EditProductDialogProps)
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form action={wrappedAction} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
              {product && <input type="hidden" {...form.register('id')} />}
             <FormField
               control={form.control}

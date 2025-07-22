@@ -12,13 +12,14 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FlameKindling, LayoutDashboard, ShoppingCart, Truck, Package, Users, LogOut, Settings, HardHat } from 'lucide-react';
+import { FlameKindling, LayoutDashboard, ShoppingCart, Package, Users, LogOut, Settings, HardHat } from 'lucide-react';
 
 const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard /> },
     { href: '/dashboard/orders', label: 'Orders', icon: <ShoppingCart /> },
     { href: '/dashboard/products', label: 'Products', icon: <Package /> },
     { href: '/dashboard/drivers', label: 'Drivers', icon: <Users /> },
+    { href: '/dashboard/settings', label: 'Settings', icon: <Settings /> },
 ];
 
 export function DashboardSidebar() {
@@ -63,12 +64,6 @@ export function DashboardSidebar() {
       </SidebarContent>
       <SidebarFooter>
          <SidebarMenu>
-            <SidebarMenuItem>
-                 <SidebarMenuButton tooltip="Settings">
-                    <Settings />
-                    <span>Settings</span>
-                 </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
                  <SidebarMenuButton asChild tooltip="Log Out">
                     <Link href="/">

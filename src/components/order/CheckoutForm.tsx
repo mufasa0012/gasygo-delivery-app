@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LocationPicker } from "./LocationPicker";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, GeoPoint } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import type { CartItem } from "@/lib/types";
@@ -24,6 +24,8 @@ const formSchema = z.object({
     address: z.string().min(5, { message: "Please provide a valid address." }),
     apartment: z.string().optional(),
     landmark: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
     paymentMethod: z.enum(["mpesa", "cash"], { required_error: "You need to select a payment method." }),
     notes: z.string().optional(),
 });
@@ -44,6 +46,9 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
             name: "",
             phone: "",
             address: "",
+            apartment: "",
+            landmark: "",
+            notes: "",
             paymentMethod: "mpesa",
         },
     });
@@ -60,11 +65,11 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
 
         setIsSubmitting(true);
         try {
-            const orderData = {
+            const orderData: any = {
                 customerName: values.name,
                 customerPhone: values.phone,
                 deliveryAddress: `${values.address}, ${values.apartment || ''}, near ${values.landmark || ''}`.trim(),
-                items: cart, // In a real app, you might only store product IDs and quantities
+                items: cart,
                 total: total,
                 status: 'Pending',
                 paymentMethod: values.paymentMethod === 'mpesa' ? 'M-Pesa' : 'Cash on Delivery',
@@ -72,9 +77,13 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
                 createdAt: serverTimestamp(),
             };
 
+            if (values.latitude && values.longitude) {
+                orderData.location = new GeoPoint(values.latitude, values.longitude);
+            }
+
+
             const docRef = await addDoc(collection(db, "orders"), orderData);
 
-            // Clear the cart from localStorage
             localStorage.removeItem('gasygo-cart');
 
             toast({
@@ -182,7 +191,7 @@ export function CheckoutForm({ cart, total }: CheckoutFormProps) {
                                         <Textarea placeholder="e.g. Call upon arrival, leave with watchman..." {...field} />
                                     </FormControl>
                                     <FormMessage />
-                                </FormItem>
+                                 </FormItem>
                             )}
                         />
                     </CardContent>

@@ -143,3 +143,18 @@ export async function addUser(prevState: any, formData: FormData) {
     return { success: false, message: errorMessage };
   }
 }
+
+export async function assignDriver(orderId: string, driverId: string, driverName: string) {
+    try {
+        await updateDoc(doc(db, "orders", orderId), {
+            assignedDriver: driverName,
+            assignedDriverId: driverId,
+            status: "Out for Delivery",
+        });
+        revalidatePath('/dashboard/orders');
+        return { success: true, message: `Order assigned to ${driverName}.` };
+    } catch (error) {
+        console.error("Error assigning driver:", error);
+        return { success: false, message: "Failed to assign driver." };
+    }
+}

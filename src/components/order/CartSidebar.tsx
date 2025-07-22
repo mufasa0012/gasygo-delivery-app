@@ -54,13 +54,12 @@ export function CartSidebar() {
         } catch (error) {
             console.error("Failed to save cart to localStorage", error);
         }
-
-        toast({
-            title: 'Added to cart!',
-            description: `${product.name} is now in your cart.`,
-        });
-
         return newCart;
+    });
+
+    toast({
+        title: 'Added to cart!',
+        description: `${product.name} is now in your cart.`,
     });
   }, [toast]);
 

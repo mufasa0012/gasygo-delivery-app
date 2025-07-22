@@ -104,6 +104,8 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
   }
 
   const currentStatusIndex = getStatusIndex(order.status);
+  const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
@@ -137,14 +139,14 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="relative w-full h-64 rounded-lg overflow-hidden border">
-                         <Image 
-                            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT as string}
+                         {imageUrlEndpoint && <Image 
+                            urlEndpoint={imageUrlEndpoint}
                             path="gasygo/nairobi-map-placeholder.jpg"
                             alt={`Map showing delivery area`}
                             fill
                             className="object-cover"
                             data-ai-hint="nairobi map"
-                        />
+                        />}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
                      <div>

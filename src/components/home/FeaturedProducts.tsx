@@ -20,7 +20,7 @@ export function FeaturedProducts() {
   const featured: Product[] = productsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)) || [];
   
   const plugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: true })
+    Autoplay({ delay: 60000, stopOnInteraction: true })
   );
 
   return (

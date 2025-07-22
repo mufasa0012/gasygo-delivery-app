@@ -6,7 +6,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
 import { MinusCircle, PlusCircle, ShoppingCart, X } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,18 +15,36 @@ const CART_STORAGE_KEY = 'gasygo-cart';
 
 export function CartSidebar() {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const { toast } = useToast();
 
-  useEffect(() => {
+  const loadCart = useCallback(() => {
     try {
         const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-        if (storedCart) {
-            setCart(JSON.parse(storedCart));
-        }
+        setCart(storedCart ? JSON.parse(storedCart) : []);
     } catch (error) {
         console.error("Failed to parse cart from localStorage", error);
+        setCart([]);
     }
   }, []);
+
+  useEffect(() => {
+    loadCart();
+
+    const handleStorageChange = () => {
+        loadCart();
+    };
+
+    const handleAddToCartEvent = (event: Event) => {
+      loadCart();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('addToCart', handleAddToCartEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('addToCart', handleAddToCartEvent);
+    };
+  }, [loadCart]);
 
   const updateCartState = (newCart: CartItem[]) => {
       setCart(newCart);
@@ -38,32 +55,6 @@ export function CartSidebar() {
         console.error("Failed to save cart to localStorage", error);
       }
   }
-
-  const handleAddToCart = useCallback((product: Product) => {
-    setCart(currentCart => {
-        const newCart = [...currentCart];
-        const existingItem = newCart.find((item) => item.product.id === product.id);
-
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            newCart.push({ product, quantity: 1 });
-        }
-        
-        try {
-            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
-            window.dispatchEvent(new Event('storage'));
-        } catch (error) {
-            console.error("Failed to save cart to localStorage", error);
-        }
-        return newCart;
-    });
-
-    toast({
-        title: 'Added to cart!',
-        description: `${product.name} is now in your cart.`,
-    });
-  }, [toast]);
 
   const updateQuantity = (productId: string, amount: number) => {
     let newCart = [...cart];
@@ -84,35 +75,6 @@ export function CartSidebar() {
   };
 
   const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
-
-  useEffect(() => {
-    const handleAddToCartEvent = (event: Event) => {
-      const { product } = (event as CustomEvent).detail;
-      handleAddToCart(product);
-    };
-
-    document.addEventListener('addToCart', handleAddToCartEvent);
-
-    const handleStorageChange = () => {
-        try {
-            const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-            if (storedCart) {
-                setCart(JSON.parse(storedCart));
-            } else {
-                setCart([]);
-            }
-        } catch (error) {
-            console.error("Failed to parse cart from localStorage", error);
-        }
-    };
-    window.addEventListener('storage', handleStorageChange);
-
-
-    return () => {
-      document.removeEventListener('addToCart', handleAddToCartEvent);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [handleAddToCart]);
 
   return (
     <Card className="shadow-lg">

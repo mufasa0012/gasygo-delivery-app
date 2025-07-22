@@ -1,34 +1,79 @@
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, MapPin, CheckCircle, Package, AlertCircle } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Package, AlertCircle, Ship, CircleCheck, CircleX } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Image } from '@imagekit/next';
+import { StatCard } from '@/components/dashboard/StatCard';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { updateOrderStatus } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+
 
 // In a real app, this would be the ID of the currently logged-in driver.
 // We'll hardcode one for this prototype.
 const CURRENT_DRIVER_ID = "1"; 
 
 export default function DriverDashboardPage() {
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const [assignedOrdersCollection, loading, error] = useCollection(
-        query(collection(db, "orders"), where("driverId", "==", CURRENT_DRIVER_ID), where("status", "==", "In Progress"))
+        query(
+            collection(db, "orders"), 
+            where("assignedDriverId", "==", CURRENT_DRIVER_ID), 
+            where("status", "in", ["In Progress", "Delivered"])
+        )
     );
     
-    const assignedOrders: Order[] = assignedOrdersCollection?.docs.map(doc => {
+    const orders: Order[] = assignedOrdersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+            createdAt: (data.createdAt as Timestamp)?.toDate ? (data.createdAt as Timestamp).toDate() : new Date(),
         } as Order;
     }) || [];
+
+    const activeOrders = orders.filter(o => o.status === 'In Progress');
+    const todaysDeliveries = orders.filter(o => o.status === 'Delivered' && format(o.createdAt, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length;
+
+
+    const handleStatusUpdate = async (orderId: string, newStatus: 'Delivered' | 'Declined') => {
+        setIsSubmitting(true);
+        const result = await updateOrderStatus(orderId, newStatus);
+        if (result.success) {
+            toast({
+                title: 'Status Updated!',
+                description: result.message,
+            });
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Update Failed',
+                description: result.message,
+            });
+        }
+        setIsSubmitting(false);
+    }
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
@@ -41,11 +86,18 @@ export default function DriverDashboardPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">My Active Deliveries</h1>
-                <p className="text-muted-foreground">Here are the orders you need to deliver.</p>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">My Dashboard</h1>
+                <p className="text-muted-foreground">Manage your deliveries and track your progress.</p>
+            </div>
+
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard title="Active Deliveries" value={activeOrders.length.toString()} icon={<Ship />} note="Orders currently in your vehicle" />
+                <StatCard title="Today's Deliveries" value={todaysDeliveries.toString()} icon={<CircleCheck />} note="Completed today" />
             </div>
             
-            {assignedOrders.length === 0 ? (
+            <h2 className="text-2xl font-bold tracking-tight font-headline">Active Deliveries</h2>
+
+            {activeOrders.length === 0 ? (
                 <Card className="text-center py-12">
                      <CardHeader>
                         <div className="mx-auto bg-green-100 dark:bg-green-900/50 rounded-full p-4 w-fit">
@@ -59,7 +111,7 @@ export default function DriverDashboardPage() {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {assignedOrders.map(order => (
+                    {activeOrders.map(order => (
                         <Card key={order.id} className="flex flex-col">
                             <CardHeader>
                                 <CardTitle className="flex justify-between items-center">
@@ -81,8 +133,8 @@ export default function DriverDashboardPage() {
                                 
                                 <div className="relative w-full h-48 mt-4 rounded-lg overflow-hidden border">
                                     <Image 
-                                        urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-                                        src="/gasygo/nairobi-map-placeholder.jpg"
+                                        urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT as string}
+                                        path="gasygo/nairobi-map-placeholder.jpg"
                                         alt={`Map showing location for ${order.deliveryAddress}`}
                                         fill
                                         className="object-cover"
@@ -98,10 +150,47 @@ export default function DriverDashboardPage() {
                                     </div>
                                 </div>
 
+                                 <div className="pt-2">
+                                    <p className="font-bold text-lg text-center">Total to Collect: Ksh {order.total.toLocaleString()}</p>
+                                    <p className="text-sm text-center">Payment Method: <Badge variant="outline">{order.paymentMethod}</Badge></p>
+                                </div>
+
                             </CardContent>
-                            <CardFooter className="flex justify-between items-center bg-secondary/50 p-4">
-                               <p className="font-bold text-lg">Ksh {order.total.toLocaleString()}</p>
-                               <p className="text-sm">Payment: <Badge variant="outline">{order.paymentMethod}</Badge></p>
+                            <CardFooter className="grid grid-cols-2 gap-2 bg-secondary/50 p-2">
+                               <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="outline" className="w-full">
+                                            <CircleX className="mr-2 h-4 w-4"/> Failed
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Delivery Failed?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will mark the order as 'Declined'. This action should only be taken if you are unable to complete the delivery.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction 
+                                                onClick={() => handleStatusUpdate(order.id, 'Declined')} 
+                                                disabled={isSubmitting}
+                                                className="bg-destructive hover:bg-destructive/90"
+                                            >
+                                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                                                Confirm Failure
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                               <Button 
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white" 
+                                    onClick={() => handleStatusUpdate(order.id, 'Delivered')}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <CheckCircle className="mr-2 h-4 w-4" />}
+                                    Mark as Delivered
+                                </Button>
                             </CardFooter>
                         </Card>
                     ))}

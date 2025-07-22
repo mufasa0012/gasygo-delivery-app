@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FlameKindling, LayoutDashboard, Truck, LogOut, UserCircle } from 'lucide-react';
+import { FlameKindling, LayoutDashboard, Truck, LogOut, UserCircle, ShieldCheck } from 'lucide-react';
 
 const menuItems = [
     { href: '/driver/dashboard', label: 'My Deliveries', icon: <LayoutDashboard /> },
@@ -48,13 +48,21 @@ export function DriverSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+            <SidebarMenuItem>
+                 <SidebarMenuButton asChild tooltip="Admin View">
+                    <Link href="/dashboard">
+                        <ShieldCheck />
+                        <span>Admin View</span>
+                    </Link>
+                 </SidebarMenuButton>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
          <SidebarMenu>
             <SidebarMenuItem>
                  <SidebarMenuButton asChild tooltip="Log Out">
-                    <Link href="/">
+                    <Link href="/login">
                         <LogOut />
                         <span>Log Out</span>
                     </Link>

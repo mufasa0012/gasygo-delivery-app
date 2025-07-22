@@ -153,9 +153,26 @@ export async function assignDriver(orderId: string, driverId: string, driverName
         });
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard');
+        revalidatePath('/driver/dashboard');
         return { success: true, message: `Order assigned to ${driverName}.` };
     } catch (error) {
         console.error("Error assigning driver:", error);
         return { success: false, message: "Failed to assign driver." };
+    }
+}
+
+
+export async function updateOrderStatus(orderId: string, status: 'Delivered' | 'Declined') {
+    try {
+        await updateDoc(doc(db, "orders", orderId), { status });
+        
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard');
+        revalidatePath('/driver/dashboard');
+
+        return { success: true, message: `Order #${orderId.substring(0,6)} has been marked as ${status}.` };
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        return { success: false, message: "Failed to update order status." };
     }
 }

@@ -3,7 +3,7 @@
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Order } from '@/lib/types';
+import type { Order, Driver } from '@/lib/types';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,18 +11,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, ShoppingCart, Truck, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { AssignDriverDropdown } from '@/components/dashboard/AssignDriverDropdown';
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
     const [recentOrdersCollection, loadingRecent, errorRecent] = useCollection(
         query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5))
     );
     const [allOrdersCollection, loadingAll, errorAll] = useCollection(collection(db, "orders"));
+    const [driversCollection, loadingDrivers, errorDrivers] = useCollection(collection(db, "drivers"));
     const [deliveredOrdersCollection, loadingDelivered, errorDelivered] = useCollection(
         query(collection(db, "orders"), where("status", "==", "Delivered"))
     );
 
-    const loading = loadingRecent || loadingAll || loadingDelivered;
-    const error = errorRecent || errorAll || errorDelivered;
+    const loading = loadingRecent || loadingAll || loadingDelivered || loadingDrivers;
+    const error = errorRecent || errorAll || errorDelivered || errorDrivers;
 
     const recentOrders: Order[] = recentOrdersCollection?.docs.map(doc => {
         const data = doc.data();
@@ -32,6 +35,8 @@ export default function DashboardPage() {
             createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
         } as Order;
     }) || [];
+
+    const drivers: Driver[] = driversCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Driver)) || [];
     
     const totalOrders = allOrdersCollection?.size ?? 0;
     const pendingOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
@@ -71,8 +76,11 @@ export default function DashboardPage() {
                         <TableHeader>
                             <TableRow>
                             <TableHead>Customer</TableHead>
+                            <TableHead>Address</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Driver</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
+                             <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -82,12 +90,24 @@ export default function DashboardPage() {
                                 <div className="font-medium">{order.customerName}</div>
                                 <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
                                 </TableCell>
+                                <TableCell className="max-w-xs truncate">{order.deliveryAddress}</TableCell>
                                 <TableCell>
-                                <Badge variant={order.status === 'Pending' ? 'secondary' : order.status === 'Delivered' ? 'default' : 'outline'}>
+                                <Badge 
+                                    variant={
+                                        order.status === 'Delivered' ? 'default' 
+                                        : order.status === 'In Progress' ? 'secondary'
+                                        : order.status === 'Pending' ? 'outline'
+                                        : 'destructive'
+                                    }
+                                >
                                     {order.status}
                                 </Badge>
                                 </TableCell>
+                                <TableCell>{order.assignedDriver || 'N/A'}</TableCell>
                                 <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">
+                                    {order.status === 'Pending' && <AssignDriverDropdown order={order} drivers={drivers} />}
+                                </TableCell>
                             </TableRow>
                             ))}
                         </TableBody>

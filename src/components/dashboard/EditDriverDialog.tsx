@@ -49,15 +49,25 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
     },
   });
 
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+    formAction(formData);
+  };
+
   useEffect(() => {
-    if (state.success) {
+    if (form.formState.isSubmitSuccessful && state.success) {
       toast({
         title: driver ? 'Driver Updated!' : 'Driver Added!',
         description: state.message,
       });
       setOpen(false);
       form.reset();
-    } else if (state.message) {
+    } else if (state.message && !state.success) {
        toast({
         variant: "destructive",
         title: 'An error occurred',
@@ -70,8 +80,13 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
     if (open) {
       // Reset form state when dialog opens
       form.reset(driver || { name: '', phone: '', vehicle: '' });
+      // also reset action state
+      if(state.message || state.success) {
+          state.message = '';
+          state.success = false;
+      }
     }
-  }, [open, driver, form]);
+  }, [open, driver, form, state]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -84,8 +99,8 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form action={formAction} className="space-y-4 py-4">
-            {driver && <input type="hidden" {...form.register('id')} />}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            {driver && <input type="hidden" value={driver.id} {...form.register('id')} />}
             <FormField
               control={form.control}
               name="name"

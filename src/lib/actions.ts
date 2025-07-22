@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, GeoPoint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { revalidatePath } from 'next/cache';
 import { adminAuth } from './firebase-admin';
@@ -49,7 +49,7 @@ export async function addDriver(prevState: any, formData: FormData) {
     const docRef = await addDoc(collection(db, 'drivers'), {
       ...data,
       available: true, // Default availability
-      location: { latitude: 0, longitude: 0 }, // Default location
+      location: new GeoPoint(0, 0),
     });
     revalidatePath('/dashboard/drivers');
     return { success: true, message: `Driver "${data.name}" added successfully.` };
@@ -149,9 +149,10 @@ export async function assignDriver(orderId: string, driverId: string, driverName
         await updateDoc(doc(db, "orders", orderId), {
             assignedDriver: driverName,
             assignedDriverId: driverId,
-            status: "Out for Delivery",
+            status: "In Progress",
         });
         revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard');
         return { success: true, message: `Order assigned to ${driverName}.` };
     } catch (error) {
         console.error("Error assigning driver:", error);

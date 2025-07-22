@@ -1,4 +1,4 @@
-import type { Timestamp } from "firebase/firestore";
+import type { Timestamp, GeoPoint } from "firebase/firestore";
 
 export type Product = {
   id: string;
@@ -24,7 +24,9 @@ export type Order = {
   status: 'Pending' | 'In Progress' | 'Delivered' | 'Declined';
   paymentMethod: 'M-Pesa' | 'Cash on Delivery';
   deliveryAddress: string;
-  driverId?: string;
+  location?: GeoPoint;
+  assignedDriver?: string;
+  assignedDriverId?: string;
   createdAt: Date;
 };
 

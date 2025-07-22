@@ -48,14 +48,6 @@ export function DriverSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-            <SidebarMenuItem>
-                 <SidebarMenuButton asChild tooltip="Admin View">
-                    <Link href="/dashboard">
-                        <ShieldCheck />
-                        <span>Admin View</span>
-                    </Link>
-                 </SidebarMenuButton>
-            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

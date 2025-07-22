@@ -5,6 +5,7 @@ import { collection, addDoc, doc, updateDoc, GeoPoint } from 'firebase/firestore
 import { db } from '@/lib/firebase';
 import { revalidatePath } from 'next/cache';
 import { adminAuth } from './firebase-admin';
+import { notifyAdminOnDelivery } from '@/ai/flows/notify-admin';
 
 // Schema for adding a new driver
 const AddDriverSchema = z.object({
@@ -166,6 +167,11 @@ export async function updateOrderStatus(orderId: string, status: 'Delivered' | '
     try {
         await updateDoc(doc(db, "orders", orderId), { status });
         
+        // If the order is delivered, trigger the admin notification.
+        if (status === 'Delivered') {
+            await notifyAdminOnDelivery({ orderId });
+        }
+
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard');
         revalidatePath('/driver/dashboard');

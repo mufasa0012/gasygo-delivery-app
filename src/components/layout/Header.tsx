@@ -5,17 +5,21 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { FlameKindling, LogIn, Menu } from 'lucide-react';
-import { useState, useRef, MouseEvent } from 'react';
+import { useState, useRef, MouseEvent, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
   // State for double-click detection
   const clickCount = useRef(0);
   const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -51,7 +55,7 @@ export function Header() {
           <span className="font-headline text-2xl font-bold text-primary">GasyGo</span>
         </Link>
 
-        <nav className={cn("hidden md:flex items-center gap-6", { "hidden": !isNavVisible })}>
+        <nav className={cn("hidden md:flex items-center gap-6", { "hidden": isMounted && !isNavVisible })}>
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">
               {link.label}

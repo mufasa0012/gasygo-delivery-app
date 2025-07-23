@@ -85,7 +85,7 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
         <DialogHeader>
           <DialogTitle>{driver ? 'Edit Driver' : 'Add New Driver'}</DialogTitle>
           <DialogDescription>
-            {driver ? "Update driver details. Note: Phone/password changes require manual admin intervention." : "The driver's password will be their phone number."}
+            {driver ? "Update driver details. Note: Phone/password changes require manual admin intervention." : "The driver will log in with their full name and use their phone number as the password."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -109,7 +109,7 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Phone Number (becomes password)</FormLabel>
                   <FormControl>
                     <Input placeholder="0712345678" {...field} disabled={!!driver}/>
                   </FormControl>
@@ -142,5 +142,3 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
     </Dialog>
   );
 }
-
-    

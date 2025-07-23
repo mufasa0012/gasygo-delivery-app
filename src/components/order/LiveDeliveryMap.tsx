@@ -52,8 +52,8 @@ export default function LiveDeliveryMap({ customerLocation, customerAddress, isT
         updateDoc(doc(db, "drivers", driverId), { location: driverGeoPoint });
       },
       (error) => {
-        console.error("Geolocation watch error:", error);
-        toast({ variant: "destructive", title: "Location Error", description: "Could not track your location." });
+        console.error("Geolocation watch error:", error.message || "An unknown error occurred. It's likely location permissions were denied.");
+        toast({ variant: "destructive", title: "Location Error", description: "Could not track your location. Please ensure location permissions are enabled for this site." });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -140,7 +140,7 @@ export default function LiveDeliveryMap({ customerLocation, customerAddress, isT
         unsubscribe();
         // Do not remove the map on cleanup to prevent re-initialization issues.
     };
-  }, [driverId, customerLocation, stadiaApiKey, mapStyle, trafficEnabled]); // Rerun on style change
+  }, [driverId, customerLocation, stadiaApiKey, mapStyle, trafficEnabled, customerAddress]); // Rerun on style change
 
   const fetchAndUpdateRoute = async (start: LngLatLike, end: LngLatLike, map: Map) => {
     try {

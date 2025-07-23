@@ -205,7 +205,10 @@ export default function DriverDashboardPage() {
 
                                  <div className="pt-2">
                                     <p className="font-bold text-lg text-center">Total to Collect: Ksh {order.total.toLocaleString()}</p>
-                                    <p className="text-sm text-center">Payment Method: <Badge variant="outline">{order.paymentMethod}</Badge></p>
+                                    <div className="text-sm text-center">
+                                        <span>Payment Method: </span>
+                                        <Badge variant="outline">{order.paymentMethod}</Badge>
+                                    </div>
                                 </div>
 
                             </CardContent>
@@ -252,5 +255,3 @@ export default function DriverDashboardPage() {
         </div>
     );
 }
-
-    

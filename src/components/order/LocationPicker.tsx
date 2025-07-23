@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -36,11 +37,11 @@ export function LocationPicker({ form }: { form: any }) {
                 setIsLocating(false);
             },
             (error) => {
-                console.error("Geolocation error:", error);
+                console.error("Geolocation error:", error.message || "An unknown error occurred.");
                 toast({ 
                     variant: "destructive", 
-                    title: "Location access denied.",
-                    description: "Please enable location permissions in your browser settings."
+                    title: "Location access failed.",
+                    description: "Could not get your location. Please enable permissions or enter your address manually."
                 });
                 setIsLocating(false);
             }

@@ -32,7 +32,7 @@ interface LiveDeliveryMapProps {
   driverId?: string;
 }
 
-export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking = false, driverId }: LiveDeliveryMapProps) {
+export default function LiveDeliveryMap({ customerLocation, customerAddress, isTracking = false, driverId }: LiveDeliveryMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const driverMarkerRef = useRef<L.Marker | null>(null);

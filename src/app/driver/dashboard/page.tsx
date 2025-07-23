@@ -7,7 +7,7 @@ import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, MapPin, CheckCircle, Ship, CircleCheck, CircleX } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Ship, CircleCheck, CircleX, Route } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,13 +21,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { updateOrderStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 
-const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap').then(mod => mod.LiveDeliveryMap), { 
+const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap'), { 
     ssr: false,
     loading: () => <div className="flex items-center justify-center h-full bg-secondary"><Loader2 className="h-6 w-6 animate-spin"/></div>
 });
@@ -149,20 +158,36 @@ export default function DriverDashboardPage() {
                                     <p className="text-sm text-muted-foreground">{order.deliveryAddress}</p>
                                 </div>
                                 
-                                <div className="relative w-full h-64 mt-4 rounded-lg overflow-hidden border">
-                                    {order.location ? (
-                                        <LiveDeliveryMap 
-                                            customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
-                                            customerAddress={order.deliveryAddress}
-                                            isTracking={true}
-                                        />
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center h-full bg-secondary">
-                                            <MapPin className="h-8 w-8 text-muted-foreground" />
-                                            <p className="text-sm text-muted-foreground mt-2">Location data not available.</p>
-                                        </div>
-                                    )}
-                                </div>
+                                {order.location ? (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full">
+                                                <Route className="mr-2 h-4 w-4" />
+                                                View My Route
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                                            <DialogHeader>
+                                                <DialogTitle>Live Delivery Route</DialogTitle>
+                                                <DialogDescription>
+                                                    Follow the map to navigate to the customer's address.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="flex-grow rounded-lg overflow-hidden border">
+                                                <LiveDeliveryMap 
+                                                    customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
+                                                    customerAddress={order.deliveryAddress}
+                                                    isTracking={true}
+                                                />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full bg-secondary p-4 rounded-lg">
+                                        <MapPin className="h-8 w-8 text-muted-foreground" />
+                                        <p className="text-sm text-muted-foreground mt-2">Location data not available.</p>
+                                    </div>
+                                )}
 
                                  <div className="pt-2">
                                     <p className="font-bold text-lg text-center">Total to Collect: Ksh {order.total.toLocaleString()}</p>

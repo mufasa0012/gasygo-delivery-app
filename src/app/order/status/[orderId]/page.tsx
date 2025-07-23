@@ -1,4 +1,5 @@
 
+
 // src/app/order/status/[orderId]/page.tsx
 'use client';
 
@@ -18,7 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap').then(mod => mod.LiveDeliveryMap), {
+const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap'), {
     ssr: false,
     loading: () => <div className="flex items-center justify-center h-full bg-secondary"><Loader2 className="h-6 w-6 animate-spin"/></div>
 });
@@ -172,11 +173,12 @@ export default function OrderStatusPage() {
                 
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <div className="relative w-full h-64 rounded-lg overflow-hidden border">
+                    <div className="relative w-full h-80 rounded-lg overflow-hidden border">
                          {order.location ? (
                            <LiveDeliveryMap 
                                 customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
                                 customerAddress={order.deliveryAddress}
+                                driverId={order.assignedDriverId} // Pass driver ID for tracking
                                 isTracking={isTrackingLive} // Only track if order is in progress
                            />
                          ) : (

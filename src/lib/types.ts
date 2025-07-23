@@ -44,6 +44,7 @@ export type Driver = {
   phone: string;
   vehicle: string;
   available: boolean;
+  location?: GeoPoint;
 };
 
 export type User = {

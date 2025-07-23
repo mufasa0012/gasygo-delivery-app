@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useToast } from '@/hooks/use-toast';
+import { doc, onSnapshot, GeoPoint, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 // Fix for default icon issue with webpack
 // @ts-ignore
@@ -16,43 +19,37 @@ L.Icon.Default.mergeOptions({
 });
 
 const driverIcon = new L.Icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+    iconUrl: 'https://firebasestorage.googleapis.com/v0/b/gasygo.appspot.com/o/assets%2Fdriver-icon.png?alt=media&token=a55f9f38-600a-4a6c-9a4f-561b85352e84',
+    iconSize: [35, 35],
+    iconAnchor: [17, 35],
     popupAnchor: [1, -34],
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    shadowSize: [41, 41],
-    className: 'hue-rotate-[240deg]' // Makes it blueish
 });
 
 interface LiveDeliveryMapProps {
   customerLocation: { lat: number; lng: number };
   customerAddress: string;
   isTracking?: boolean;
+  driverId?: string;
 }
 
-export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking = false }: LiveDeliveryMapProps) {
+export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking = false, driverId }: LiveDeliveryMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const driverMarkerRef = useRef<L.Marker | null>(null);
   const routePolylineRef = useRef<L.Polyline | null>(null);
   const { toast } = useToast();
 
-  const [driverPosition, setDriverPosition] = useState<L.LatLng | null>(null);
   const watcherRef = useRef<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Initialize map
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
+    setIsLoading(true);
 
     const customerLatLng = new L.LatLng(customerLocation.lat, customerLocation.lng);
 
-    mapRef.current = L.map(mapContainerRef.current, {
-      center: customerLatLng,
-      zoom: 13,
-      scrollWheelZoom: false,
-    });
+    mapRef.current = L.map(mapContainerRef.current).setView(customerLatLng, 13);
 
     L.tileLayer(
       `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`,
@@ -62,29 +59,25 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
     ).addTo(mapRef.current);
 
     // Add static customer marker
-    L.marker(customerLatLng).addTo(mapRef.current);
+    L.marker(customerLatLng).addTo(mapRef.current).bindPopup(`<b>Destination</b><br>${customerAddress}`).openPopup();
     
-    // Cleanup function
+    setIsLoading(false);
+
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [customerLocation]);
+  }, [customerLocation, customerAddress]); // Only re-initialize if customer location changes
 
-  // Start/Stop geolocation tracking
+  // Handles tracking the driver's own location
   useEffect(() => {
-    if (!isTracking) {
-      if (watcherRef.current !== null) {
-        navigator.geolocation.clearWatch(watcherRef.current);
-        watcherRef.current = null;
-      }
-      return;
-    }
+    if (!isTracking || !driverId) return;
 
     watcherRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setDriverPosition(new L.LatLng(latitude, longitude));
+        const driverGeoPoint = new GeoPoint(latitude, longitude);
+        updateDoc(doc(db, "drivers", driverId), { location: driverGeoPoint });
       },
       (error) => {
         console.error("Geolocation watch error:", error);
@@ -102,55 +95,81 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
         navigator.geolocation.clearWatch(watcherRef.current);
       }
     };
-  }, [isTracking, toast]);
+  }, [isTracking, driverId, toast]);
 
-  // Update driver marker and map view
+  // Subscribes to driver location updates from Firestore
   useEffect(() => {
-    if (!driverPosition || !mapRef.current) return;
-    
-    // Update marker
-    if (!driverMarkerRef.current) {
-        driverMarkerRef.current = L.marker(driverPosition, { icon: driverIcon }).addTo(mapRef.current);
-    } else {
-        driverMarkerRef.current.setLatLng(driverPosition);
-    }
+    if (!driverId || !mapRef.current) return;
 
-    // Update view
-    const customerLatLng = new L.LatLng(customerLocation.lat, customerLocation.lng);
-    const bounds = L.latLngBounds([driverPosition, customerLatLng]);
-    mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    const unsubscribe = onSnapshot(doc(db, "drivers", driverId), (snapshot) => {
+        const data = snapshot.data();
+        if (data?.location && mapRef.current) {
+            const { latitude, longitude } = data.location;
+            const driverPosition = new L.LatLng(latitude, longitude);
 
-    // Fetch and update route
-    async function fetchAndUpdateRoute() {
-        try {
-            const apiKey = process.env.NEXT_PUBLIC_STADIA_API_KEY;
-            if (!apiKey) return;
-
-            const locations = [{ lat: driverPosition!.lat, lon: driverPosition!.lng }, { lat: customerLocation.lat, lon: customerLocation.lng }];
-            
-            const response = await fetch(`https://api.stadiamaps.com/route/v1?api_key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locations, costing: 'auto', units: 'kilometers', shape_format: 'polyline6' })
-            });
-            const data = await response.json();
-            
-            if (data.trip?.legs[0]?.shape) {
-                // @ts-ignore
-                const decoded = L.Polyline.fromEncoded(data.trip.legs[0].shape, { precision: 6 }).getLatLngs() as L.LatLng[];
-                if (routePolylineRef.current) {
-                    routePolylineRef.current.setLatLngs(decoded);
-                } else {
-                    routePolylineRef.current = L.polyline(decoded, { color: 'blue' }).addTo(mapRef.current!);
-                }
+            // Update marker
+            if (!driverMarkerRef.current) {
+                driverMarkerRef.current = L.marker(driverPosition, { icon: driverIcon }).addTo(mapRef.current);
+            } else {
+                driverMarkerRef.current.setLatLng(driverPosition);
             }
-        } catch (error) {
-            console.error("Failed to fetch route:", error);
+
+            // Update view and route
+            const customerLatLng = new L.LatLng(customerLocation.lat, customerLocation.lng);
+            const bounds = L.latLngBounds([driverPosition, customerLatLng]);
+            mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+
+            fetchAndUpdateRoute(driverPosition, customerLatLng, mapRef.current);
         }
+    });
+
+    return () => unsubscribe();
+
+  }, [driverId, customerLocation]);
+
+  // Helper function to fetch and draw the route
+  const fetchAndUpdateRoute = async (start: L.LatLng, end: L.LatLng, map: L.Map) => {
+    try {
+        const apiKey = process.env.NEXT_PUBLIC_STADIA_API_KEY;
+        if (!apiKey) return;
+
+        const locations = [{ lat: start.lat, lon: start.lng }, { lat: end.lat, lon: end.lng }];
+        
+        const response = await fetch(`https://api.stadiamaps.com/route/v1?api_key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locations, costing: 'auto', units: 'kilometers', shape_format: 'polyline6' })
+        });
+        const data = await response.json();
+        
+        if (data.trip?.legs[0]?.shape) {
+            // @ts-ignore
+            const decoded = L.Polyline.fromEncoded(data.trip.legs[0].shape, { precision: 6 }).getLatLngs() as L.LatLng[];
+            if (routePolylineRef.current) {
+                routePolylineRef.current.setLatLngs(decoded);
+            } else {
+                routePolylineRef.current = L.polyline(decoded, { color: 'hsl(var(--primary))', weight: 5 }).addTo(map);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to fetch route:", error);
+        toast({
+            variant: "destructive",
+            title: "Routing Error",
+            description: "Could not fetch the delivery route.",
+        });
     }
-    fetchAndUpdateRoute();
+  }
 
-  }, [driverPosition, customerLocation]);
 
-  return <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }} />;
+  return (
+    <div className="relative h-full w-full">
+        {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80 z-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )}
+        <div ref={mapContainerRef} className="h-full w-full" />
+    </div>
+  );
 }

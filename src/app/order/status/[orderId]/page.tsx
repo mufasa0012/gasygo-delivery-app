@@ -169,14 +169,16 @@ export default function OrderStatusPage() {
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="relative w-full h-64 rounded-lg overflow-hidden border">
-                         {!!imageUrlEndpoint && <Image 
-                            urlEndpoint={imageUrlEndpoint}
-                            path="gasygo/nairobi-map-placeholder.jpg"
-                            alt={`Map showing delivery area`}
-                            fill
-                            className="object-cover"
-                            data-ai-hint="nairobi map"
-                        />}
+                         {imageUrlEndpoint && (
+                           <Image 
+                                urlEndpoint={imageUrlEndpoint}
+                                path="gasygo/nairobi-map-placeholder.jpg"
+                                alt={`Map showing delivery area`}
+                                fill
+                                className="object-cover"
+                                data-ai-hint="nairobi map"
+                            />
+                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
                      <div>

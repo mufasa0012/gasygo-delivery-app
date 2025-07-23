@@ -89,6 +89,8 @@ export default function DriverDashboardPage() {
 
     const loading = loadingActive || loadingDelivered;
     const error = errorActive || errorDelivered;
+    const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
@@ -147,14 +149,16 @@ export default function DriverDashboardPage() {
                                 </div>
                                 
                                 <div className="relative w-full h-48 mt-4 rounded-lg overflow-hidden border">
-                                    <Image 
-                                        urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT as string}
-                                        path="gasygo/nairobi-map-placeholder.jpg"
-                                        alt={`Map showing location for ${order.deliveryAddress}`}
-                                        fill
-                                        className="object-cover"
-                                        data-ai-hint="nairobi map"
-                                    />
+                                    {imageUrlEndpoint && (
+                                        <Image 
+                                            urlEndpoint={imageUrlEndpoint}
+                                            path="gasygo/nairobi-map-placeholder.jpg"
+                                            alt={`Map showing location for ${order.deliveryAddress}`}
+                                            fill
+                                            className="object-cover"
+                                            data-ai-hint="nairobi map"
+                                        />
+                                    )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                                     <div className="absolute bottom-2 left-2">
                                         <Button size="sm" asChild>

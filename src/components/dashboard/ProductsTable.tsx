@@ -70,7 +70,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                     {products.map((product) => (
                         <TableRow key={product.id}>
                             <TableCell>
-                                {!!imageUrlEndpoint && (
+                                {imageUrlEndpoint && (
                                     <Image 
                                         urlEndpoint={imageUrlEndpoint}
                                         src={product.image || 'default-placeholder.png'} 

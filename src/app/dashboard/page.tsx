@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck, UserX } from 'lucide-react';
+import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck, Bell, BellOff } from 'lucide-react';
 import Link from 'next/link';
 import { AssignDriverDropdown } from '@/components/dashboard/AssignDriverDropdown';
-import { format } from 'date-fns';
+import { useNotificationSound } from '@/hooks/use-notification-sound';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
+    // --- Data Fetching ---
     const [recentOrdersCollection, loadingRecent, errorRecent] = useCollection(
         query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5))
     );
@@ -26,7 +28,12 @@ export default function DashboardPage() {
 
     const loading = loadingRecent || loadingAll || loadingDelivered || loadingDrivers;
     const error = errorRecent || errorAll || errorDelivered || errorDrivers;
+    
+    // --- Sound Notifications ---
+    const { playNewOrderSound, playReminderSound, isMuted, toggleMute, requestInteraction } = useNotificationSound();
+    const [prevPendingCount, setPrevPendingCount] = useState<number | null>(null);
 
+    // --- Processed Data ---
     const recentOrders: Order[] = recentOrdersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
@@ -38,33 +45,58 @@ export default function DashboardPage() {
 
     const drivers: Driver[] = driversCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Driver)) || [];
     
-    // Determine driver availability based on assigned 'In Progress' orders
     const inProgressOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'In Progress').map(doc => doc.data().assignedDriverId) || [];
     const availableDrivers = drivers.filter(driver => !inProgressOrders.includes(driver.id));
     const onDeliveryDrivers = drivers.filter(driver => inProgressOrders.includes(driver.id));
 
-
     const totalOrders = allOrdersCollection?.size ?? 0;
-    const pendingOrders = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
-    const newCustomers = allOrdersCollection?.docs.map(doc => doc.data().customerPhone).filter((value, index, self) => self.indexOf(value) === index).length ?? 0;
+    const pendingOrdersCount = allOrdersCollection?.docs.filter(doc => doc.data().status === 'Pending').length ?? 0;
     const totalRevenue = deliveredOrdersCollection?.docs.reduce((acc, doc) => acc + doc.data().total, 0) ?? 0;
 
+    // --- Sound Effect Logic ---
+    useEffect(() => {
+        if (!loading && prevPendingCount !== null && pendingOrdersCount > prevPendingCount) {
+            playNewOrderSound();
+        }
+        setPrevPendingCount(pendingOrdersCount);
+    }, [pendingOrdersCount, prevPendingCount, loading, playNewOrderSound]);
+
+    useEffect(() => {
+        let reminderInterval: NodeJS.Timeout | null = null;
+        if (pendingOrdersCount > 0) {
+            reminderInterval = setInterval(() => {
+                playReminderSound();
+            }, 30000); // Remind every 30 seconds
+        }
+        return () => {
+            if (reminderInterval) {
+                clearInterval(reminderInterval);
+            }
+        };
+    }, [pendingOrdersCount, playReminderSound]);
+
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" onClick={requestInteraction}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
                 <p className="text-muted-foreground">Welcome back! Here's a snapshot of your business today.</p>
             </div>
-             <Button asChild>
-                <Link href="/order">Create New Order</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+                 <Button variant="outline" size="icon" onClick={toggleMute} title={isMuted ? "Unmute Sounds" : "Mute Sounds"}>
+                    {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                </Button>
+                <Button asChild>
+                    <Link href="/order">Create New Order</Link>
+                </Button>
+            </div>
         </div>
         
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard title="Total Revenue" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Ksh ${totalRevenue.toLocaleString()}`} icon={<DollarSign />} note="From delivered orders" />
             <StatCard title="Total Orders" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : totalOrders.toString()} icon={<ShoppingCart />} note="All time" />
-            <StatCard title="Deliveries Pending" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : pendingOrders.toString()} icon={<Truck />} note="Ready for assignment" />
+            <StatCard title="Deliveries Pending" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : pendingOrdersCount.toString()} icon={<Truck />} note="Ready for assignment" />
             <StatCard title="Available Drivers" value={loading ? <Loader2 className="h-5 w-5 animate-spin" /> : availableDrivers.length.toString()} icon={<UserCheck />} note="Ready for deliveries" />
         </div>
 

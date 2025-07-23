@@ -4,29 +4,24 @@
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 import { Button } from '../ui/button';
-import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
+import { useNotificationSound } from '@/hooks/use-notification-sound';
+import { Bell, BellOff } from 'lucide-react';
 
 function getPageTitle(pathname: string): string {
   if (pathname.includes('/orders')) return 'Orders';
   if (pathname.includes('/products')) return 'Products';
   if (pathname.includes('/drivers')) return 'Drivers';
   if (pathname.includes('/users')) return 'Users';
+  if (pathname.includes('/settings')) return 'Settings';
   return 'Dashboard';
-}
-
-function getAddButtonLink(pathname: string): string | null {
-    if (pathname.includes('/products')) return '/dashboard/products'; // Dialog is on this page
-    if (pathname.includes('/drivers')) return '/dashboard/drivers'; // Dialog is on this page
-    return '/order'; // Default to new order
 }
 
 
 export function DashboardHeader() {
   const { isMobile } = useSidebar();
+  const { isMuted, toggleMute } = useNotificationSound();
   const pathname = usePathname();
   const title = getPageTitle(pathname);
-  const addButtonLink = getAddButtonLink(pathname);
 
 
   if (!isMobile) return null;
@@ -37,7 +32,9 @@ export function DashboardHeader() {
         <SidebarTrigger />
         <h1 className="text-xl font-semibold font-headline">{title}</h1>
       </div>
-       
+       <Button variant="ghost" size="icon" onClick={toggleMute} title={isMuted ? "Unmute Sounds" : "Mute Sounds"}>
+        {isMuted ? <BellOff className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+       </Button>
     </header>
   );
 }

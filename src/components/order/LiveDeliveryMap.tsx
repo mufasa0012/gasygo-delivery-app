@@ -38,15 +38,19 @@ function MapUpdater({ driverPosition, customerLocation, route }: { driverPositio
     useEffect(() => {
         if (driverPosition) {
             const bounds = L.latLngBounds([driverPosition, customerLocation]);
-            if(route.length > 0) {
-                bounds.extend(route);
-            }
             map.fitBounds(bounds, { padding: [50, 50] });
         } else {
             map.setView(customerLocation, 13);
         }
-    }, [driverPosition, customerLocation, route, map]);
-    return null;
+    }, [driverPosition, customerLocation, map]);
+
+    return (
+        <>
+            <Marker position={customerLocation}></Marker>
+            {driverPosition && <Marker position={driverPosition} icon={driverIcon} />}
+            {route.length > 0 && <Polyline positions={route} color="blue" />}
+        </>
+    );
 }
 
 export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking = false }: LiveDeliveryMapProps) {
@@ -54,7 +58,6 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const { toast } = useToast();
   const watcherRef = useRef<number | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     if (!isTracking) return;
@@ -147,17 +150,11 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
         zoom={13} 
         scrollWheelZoom={false} 
         style={{ height: '100%', width: '100%' }}
-        whenCreated={map => mapRef.current = map}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`}
       />
-      <Marker position={customerLatLng}>
-        
-      </Marker>
-      {driverPosition && <Marker position={driverPosition} icon={driverIcon} />}
-      {route.length > 0 && <Polyline positions={route} color="blue" />}
       <MapUpdater driverPosition={driverPosition} customerLocation={customerLatLng} route={route} />
     </MapContainer>
   );

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -149,7 +150,7 @@ export default function DriverDashboardPage() {
                                 </div>
                                 
                                 <div className="relative w-full h-48 mt-4 rounded-lg overflow-hidden border">
-                                    {imageUrlEndpoint && (
+                                    {imageUrlEndpoint && imageUrlEndpoint.length > 0 && (
                                         <Image 
                                             urlEndpoint={imageUrlEndpoint}
                                             path="gasygo/nairobi-map-placeholder.jpg"

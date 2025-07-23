@@ -22,6 +22,8 @@ export default function SettingsPage() {
   const [heroImageUrl, setHeroImageUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
 
   useEffect(() => {
     if (settingsDoc?.exists()) {
@@ -108,9 +110,9 @@ export default function SettingsPage() {
           <div>
             <label className="text-sm font-medium mb-2 block">Image Preview</label>
             <div className="w-full aspect-video rounded-md border border-dashed flex items-center justify-center bg-secondary overflow-hidden">
-              {heroImageUrl ? (
+              {imageUrlEndpoint && imageUrlEndpoint.length > 0 && heroImageUrl ? (
                 <Image
-                  urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!}
+                  urlEndpoint={imageUrlEndpoint}
                   src={heroImageUrl}
                   alt="Hero image preview"
                   width={600}

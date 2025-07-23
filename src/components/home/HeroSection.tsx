@@ -22,7 +22,7 @@ export function HeroSection() {
 
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] text-white bg-secondary">
-      {(loading || !imageUrlEndpoint) && (
+      {(loading || !imageUrlEndpoint || imageUrlEndpoint.length === 0) && (
         <Skeleton className="absolute inset-0" />
       )}
       {error && (
@@ -30,7 +30,7 @@ export function HeroSection() {
           <p>Could not load hero image.</p>
         </div>
       )}
-      {!loading && !error && imageUrlEndpoint && (
+      {!loading && !error && imageUrlEndpoint && imageUrlEndpoint.length > 0 && (
          <Image
             urlEndpoint={imageUrlEndpoint}
             src={heroImageUrl}

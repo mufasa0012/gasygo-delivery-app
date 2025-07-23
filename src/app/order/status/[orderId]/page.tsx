@@ -169,7 +169,7 @@ export default function OrderStatusPage() {
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="relative w-full h-64 rounded-lg overflow-hidden border">
-                         {imageUrlEndpoint && (
+                         {imageUrlEndpoint && imageUrlEndpoint.length > 0 && (
                            <Image 
                                 urlEndpoint={imageUrlEndpoint}
                                 path="gasygo/nairobi-map-placeholder.jpg"

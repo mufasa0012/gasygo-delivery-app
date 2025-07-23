@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -53,6 +54,7 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const { toast } = useToast();
   const watcherRef = useRef<number | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     if (!isTracking) return;
@@ -140,7 +142,13 @@ export function LiveDeliveryMap({ customerLocation, customerAddress, isTracking 
   const customerLatLng = new L.LatLng(customerLocation.lat, customerLocation.lng);
 
   return (
-    <MapContainer center={customerLatLng} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+    <MapContainer 
+        center={customerLatLng} 
+        zoom={13} 
+        scrollWheelZoom={false} 
+        style={{ height: '100%', width: '100%' }}
+        whenCreated={map => mapRef.current = map}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`}

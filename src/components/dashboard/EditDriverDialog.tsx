@@ -36,10 +36,11 @@ interface EditDriverDialogProps {
 export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-
+  
+  // NOTE: The updateDriver action is not fully implemented for auth changes.
+  // This dialog currently only supports ADDING new drivers with auth.
   const action = driver ? updateDriver : addDriver;
-  const [state, formAction] = useActionState(action, { success: false, message: '' });
+  const [state, formAction, isPending] = useActionState(action, { success: false, message: '' });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,41 +51,27 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
-      }
-    });
-    startTransition(() => {
-        formAction(formData);
-    })
-  };
-
   useEffect(() => {
-    if (form.formState.isSubmitSuccessful && state.success) {
+    if (state.success && (form.formState.isSubmitSuccessful || !isPending)) {
       toast({
         title: driver ? 'Driver Updated!' : 'Driver Added!',
         description: state.message,
       });
       setOpen(false);
       form.reset();
-    } else if (form.formState.isSubmitSuccessful && state.message && !state.success) {
+    } else if (state.message && !state.success && (form.formState.isSubmitSuccessful || !isPending)) {
        toast({
         variant: "destructive",
         title: 'An error occurred',
         description: state.message,
       });
     }
-  }, [state, driver, form, toast, form.formState.isSubmitSuccessful]);
+  }, [state, driver, form, toast, isPending, form.formState.isSubmitSuccessful]);
 
   useEffect(() => {
     if (open) {
-      // Reset form state when dialog opens
       form.reset(driver || { name: '', phone: '', vehicle: '' });
-      // also reset action state
-      if(state.message || state.success) {
+      if (state.message || state.success) {
           state.message = '';
           state.success = false;
       }
@@ -98,11 +85,11 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
         <DialogHeader>
           <DialogTitle>{driver ? 'Edit Driver' : 'Add New Driver'}</DialogTitle>
           <DialogDescription>
-            {driver ? 'Update the details for this driver.' : 'Fill in the details for the new driver.'}
+            {driver ? "Update driver details. Note: Phone/password changes require manual admin intervention." : "The driver's password will be their phone number."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form action={formAction} className="space-y-4 py-4">
             {driver && <input type="hidden" value={driver.id} {...form.register('id')} />}
             <FormField
               control={form.control}
@@ -124,7 +111,7 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="0712345678" {...field} />
+                    <Input placeholder="0712345678" {...field} disabled={!!driver}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,3 +142,5 @@ export function EditDriverDialog({ driver, children }: EditDriverDialogProps) {
     </Dialog>
   );
 }
+
+    

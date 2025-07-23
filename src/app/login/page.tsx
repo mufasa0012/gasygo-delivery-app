@@ -15,7 +15,7 @@ const loginOptions = [
     icon: <Truck className="h-12 w-12 text-primary" />,
     title: "Driver",
     description: "View your assigned deliveries and navigate to customer locations.",
-    href: "/driver/dashboard",
+    href: "/driver/login",
     buttonText: "Continue as Driver",
   },
 ];
@@ -50,3 +50,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

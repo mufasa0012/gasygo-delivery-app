@@ -26,7 +26,7 @@ export type Order = {
   deliveryAddress: string;
   location?: GeoPoint;
   assignedDriver?: string;
-  assignedDriverId?: string;
+  assignedDriverId?: string; // This will now be the Firebase Auth UID of the driver
   createdAt: Date;
 };
 
@@ -39,7 +39,7 @@ export type Customer = {
 };
 
 export type Driver = {
-  id: string;
+  id: string; // This is the Firebase Auth UID
   name: string;
   phone: string;
   vehicle: string;
@@ -53,3 +53,5 @@ export type User = {
     email: string;
     role: 'admin' | 'customer' | 'driver';
 }
+
+    

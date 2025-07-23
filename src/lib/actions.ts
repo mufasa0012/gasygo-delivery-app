@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { collection, addDoc, doc, updateDoc, GeoPoint } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, GeoPoint, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { revalidatePath } from 'next/cache';
 import { adminAuth } from './firebase-admin';
@@ -46,17 +46,39 @@ const UserSchema = z.object({
 export async function addDriver(prevState: any, formData: FormData) {
   try {
     const data = AddDriverSchema.parse(Object.fromEntries(formData));
+    const email = `${data.phone}@gasygo.app`;
 
-    const docRef = await addDoc(collection(db, 'drivers'), {
-      ...data,
-      available: true, // Default availability
+    // Create Firebase Auth user
+    const userRecord = await adminAuth.createUser({
+      email,
+      emailVerified: true,
+      password: data.phone, // Password is the phone number
+      displayName: data.name,
+      disabled: false,
+    });
+    
+    // Set custom role claim
+    await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'driver' });
+
+    // Create driver document in Firestore with UID as the ID
+    await setDoc(doc(db, 'drivers', userRecord.uid), {
+      name: data.name,
+      phone: data.phone,
+      vehicle: data.vehicle,
+      available: true,
       location: new GeoPoint(0, 0),
     });
+
     revalidatePath('/dashboard/drivers');
     return { success: true, message: `Driver "${data.name}" added successfully.` };
   } catch (error: any) {
     console.error('Error adding driver:', error);
-    const errorMessage = error.issues ? error.issues.map((e: any) => e.message).join(', ') : 'Failed to add driver.';
+    let errorMessage = 'Failed to add driver.';
+    if (error.code === 'auth/email-already-exists') {
+      errorMessage = 'A driver with this phone number already exists.';
+    } else if (error.issues) {
+       errorMessage = error.issues.map((e: any) => e.message).join(', ');
+    }
     return { success: false, message: errorMessage };
   }
 }
@@ -184,3 +206,5 @@ export async function updateOrderStatus(orderId: string, status: 'Delivered' | '
         return { success: false, message: `Failed to update order status: ${error.message}` };
     }
 }
+
+    

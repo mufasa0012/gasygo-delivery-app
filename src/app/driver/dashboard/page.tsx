@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -21,7 +20,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -35,34 +33,34 @@ import { updateOrderStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import Link from 'next/link';
 
 const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap'), { 
     ssr: false,
     loading: () => <div className="flex items-center justify-center h-full bg-secondary"><Loader2 className="h-6 w-6 animate-spin"/></div>
 });
 
-// In a real app, this would be the ID of the currently logged-in driver.
-// We'll hardcode one for this prototype.
-const CURRENT_DRIVER_ID = "1"; 
-
 export default function DriverDashboardPage() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [user, loadingAuth, errorAuth] = useAuthState(auth);
 
     const [activeOrdersCollection, loadingActive, errorActive] = useCollection(
-        query(
+        user ? query(
             collection(db, "orders"), 
-            where("assignedDriverId", "==", CURRENT_DRIVER_ID), 
+            where("assignedDriverId", "==", user.uid), 
             where("status", "==", "In Progress")
-        )
+        ) : undefined
     );
 
     const [deliveredOrdersCollection, loadingDelivered, errorDelivered] = useCollection(
-        query(
+        user ? query(
             collection(db, "orders"),
-            where("assignedDriverId", "==", CURRENT_DRIVER_ID),
+            where("assignedDriverId", "==", user.uid),
             where("status", "==", "Delivered")
-        )
+        ) : undefined
     );
     
     const activeOrders: Order[] = useMemo(() => activeOrdersCollection?.docs.map(doc => {
@@ -99,8 +97,8 @@ export default function DriverDashboardPage() {
         setIsSubmitting(false);
     }
 
-    const loading = loadingActive || loadingDelivered;
-    const error = errorActive || errorDelivered;
+    const loading = loadingAuth || loadingActive || loadingDelivered;
+    const error = errorAuth || errorActive || errorDelivered;
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
@@ -108,6 +106,20 @@ export default function DriverDashboardPage() {
 
     if (error) {
         return <p className="text-destructive text-center">Error loading assigned orders: {error.message}</p>;
+    }
+    
+    if (!user) {
+        return (
+            <Card className="text-center py-12">
+                <CardHeader>
+                    <CardTitle>Access Denied</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4">You must be logged in as a driver to view this page.</p>
+                    <Button asChild><Link href="/driver/login">Login</Link></Button>
+                </CardContent>
+            </Card>
+        )
     }
 
     return (
@@ -158,7 +170,7 @@ export default function DriverDashboardPage() {
                                     <p className="text-sm text-muted-foreground">{order.deliveryAddress}</p>
                                 </div>
                                 
-                                {order.location ? (
+                                {order.location && user.uid ? (
                                     <Dialog>
                                         <DialogTrigger asChild>
                                             <Button variant="outline" className="w-full">
@@ -177,6 +189,7 @@ export default function DriverDashboardPage() {
                                                 <LiveDeliveryMap 
                                                     customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
                                                     customerAddress={order.deliveryAddress}
+                                                    driverId={user.uid}
                                                     isTracking={true}
                                                 />
                                             </div>
@@ -238,3 +251,5 @@ export default function DriverDashboardPage() {
         </div>
     );
 }
+
+    

@@ -10,8 +10,13 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FlameKindling, LayoutDashboard, Truck, LogOut, UserCircle, ShieldCheck } from 'lucide-react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '../ui/skeleton';
 
 const menuItems = [
     { href: '/driver/dashboard', label: 'My Deliveries', icon: <LayoutDashboard /> },
@@ -19,14 +24,41 @@ const menuItems = [
 
 export function DriverSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [user, loading] = useAuthState(auth);
+
+  const handleLogout = async () => {
+      await signOut(auth);
+      toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out."
+      });
+      router.push('/driver/login');
+  }
 
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="flex flex-col items-center text-center p-4 group-data-[collapsible=icon]:hidden">
-            <UserCircle className="h-16 w-16 text-primary mb-2" />
-            <h2 className="font-semibold text-lg">John Driver</h2>
-            <p className="text-xs text-sidebar-foreground/70">On Duty</p>
+            {loading ? (
+                <>
+                    <Skeleton className="h-16 w-16 rounded-full mb-2" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-4 w-16 mt-1" />
+                </>
+            ) : user ? (
+                 <>
+                    <UserCircle className="h-16 w-16 text-primary mb-2" />
+                    <h2 className="font-semibold text-lg">{user.displayName || 'Driver'}</h2>
+                    <p className="text-xs text-sidebar-foreground/70">On Duty</p>
+                </>
+            ) : (
+                <>
+                    <UserCircle className="h-16 w-16 text-muted-foreground mb-2" />
+                    <h2 className="font-semibold text-lg">Not Logged In</h2>
+                </>
+            )}
         </div>
         <div className="hidden group-data-[collapsible=icon]:flex justify-center p-2">
             <UserCircle className="h-8 w-8 text-primary" />
@@ -53,11 +85,9 @@ export function DriverSidebar() {
       <SidebarFooter>
          <SidebarMenu>
             <SidebarMenuItem>
-                 <SidebarMenuButton asChild tooltip="Log Out">
-                    <Link href="/login">
-                        <LogOut />
-                        <span>Log Out</span>
-                    </Link>
+                 <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
+                    <LogOut />
+                    <span>Log Out</span>
                  </SidebarMenuButton>
             </SidebarMenuItem>
          </SidebarMenu>
@@ -65,3 +95,5 @@ export function DriverSidebar() {
     </Sidebar>
   );
 }
+
+    

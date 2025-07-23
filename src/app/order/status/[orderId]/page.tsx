@@ -1,20 +1,22 @@
+
 // src/app/order/status/[orderId]/page.tsx
 'use client';
 
-import { doc, DocumentData } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { CheckCircle2, Loader2, Package, Truck, PartyPopper, AlertTriangle, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Order } from '@/lib/types';
+import type { Order } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Image } from '@imagekit/next';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useParams } from 'next/navigation';
 
 
 const statusSteps = [
@@ -33,8 +35,9 @@ function getStatusIndex(status: Order['status']) {
     }
 }
 
-export default function OrderStatusPage({ params }: { params: { orderId: string } }) {
-  const { orderId } = params;
+export default function OrderStatusPage() {
+  const params = useParams();
+  const orderId = params.orderId as string;
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderDoc, loading, error] = useDocument(doc(db, 'orders', orderId));

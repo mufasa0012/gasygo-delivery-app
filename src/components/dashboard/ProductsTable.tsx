@@ -29,6 +29,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products }: ProductsTableProps) {
     const { toast } = useToast();
+    const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
 
     if (products.length === 0) {
         return <p className="text-muted-foreground text-center">No products found.</p>
@@ -69,14 +70,16 @@ export function ProductsTable({ products }: ProductsTableProps) {
                     {products.map((product) => (
                         <TableRow key={product.id}>
                             <TableCell>
-                                <Image 
-                                    urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT} 
-                                    src={product.image || 'default-placeholder.png'} 
-                                    alt={product.name} 
-                                    width={40} 
-                                    height={40} 
-                                    className="rounded-md object-cover" 
-                                />
+                                {!!imageUrlEndpoint && (
+                                    <Image 
+                                        urlEndpoint={imageUrlEndpoint}
+                                        src={product.image || 'default-placeholder.png'} 
+                                        alt={product.name} 
+                                        width={40} 
+                                        height={40} 
+                                        className="rounded-md object-cover" 
+                                    />
+                                )}
                             </TableCell>
                             <TableCell className="font-medium">{product.name}</TableCell>
                             <TableCell><Badge variant="outline">{product.category}</Badge></TableCell>

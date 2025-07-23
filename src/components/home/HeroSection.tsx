@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Image } from '@imagekit/next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Truck, Zap, ShieldCheck, Loader2 } from 'lucide-react';
+import { Truck, Zap, ShieldCheck } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
 
@@ -22,7 +22,7 @@ export function HeroSection() {
 
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] text-white bg-secondary">
-      {loading && (
+      {(loading || !imageUrlEndpoint) && (
         <Skeleton className="absolute inset-0" />
       )}
       {error && (
@@ -30,7 +30,7 @@ export function HeroSection() {
           <p>Could not load hero image.</p>
         </div>
       )}
-      {!loading && !error && !!imageUrlEndpoint && (
+      {!loading && !error && imageUrlEndpoint && (
          <Image
             urlEndpoint={imageUrlEndpoint}
             src={heroImageUrl}

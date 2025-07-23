@@ -179,8 +179,8 @@ export default function DriverDashboardPage() {
                                                 View My Route
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-                                            <DialogHeader>
+                                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-2 sm:p-4 md:p-6">
+                                            <DialogHeader className="px-4 pt-4 sm:px-2 sm:pt-2">
                                                 <DialogTitle>Live Delivery Route</DialogTitle>
                                                 <DialogDescription>
                                                     Follow the map to navigate to the customer's address.

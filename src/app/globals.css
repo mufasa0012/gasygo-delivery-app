@@ -77,3 +77,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* MapLibre GL Popup Customization */
+.maplibregl-popup-content {
+    @apply bg-card text-card-foreground rounded-lg shadow-lg p-2 text-sm;
+}
+
+.maplibregl-popup-close-button {
+    @apply text-card-foreground/70 hover:text-card-foreground;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+    @apply border-b-card;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+    @apply border-t-card;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    @apply border-r-card;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    @apply border-l-card;
+}

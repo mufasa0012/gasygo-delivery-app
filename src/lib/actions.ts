@@ -175,10 +175,12 @@ export async function updateOrderStatus(orderId: string, status: 'Delivered' | '
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard');
         revalidatePath('/driver/dashboard');
+        revalidatePath(`/order/status/${orderId}`);
+
 
         return { success: true, message: `Order #${orderId.substring(0,6)} has been marked as ${status}.` };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error updating order status:", error);
-        return { success: false, message: "Failed to update order status." };
+        return { success: false, message: `Failed to update order status: ${error.message}` };
     }
 }

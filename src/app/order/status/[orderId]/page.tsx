@@ -166,7 +166,7 @@ export default function OrderStatusPage({ params }: { params: { orderId: string 
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="relative w-full h-64 rounded-lg overflow-hidden border">
-                         {imageUrlEndpoint && <Image 
+                         {!!imageUrlEndpoint && <Image 
                             urlEndpoint={imageUrlEndpoint}
                             path="gasygo/nairobi-map-placeholder.jpg"
                             alt={`Map showing delivery area`}

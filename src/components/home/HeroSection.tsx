@@ -30,7 +30,7 @@ export function HeroSection() {
           <p>Could not load hero image.</p>
         </div>
       )}
-      {!loading && !error && imageUrlEndpoint && (
+      {!loading && !error && !!imageUrlEndpoint && (
          <Image
             urlEndpoint={imageUrlEndpoint}
             src={heroImageUrl}

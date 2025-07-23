@@ -28,6 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import type { Driver } from '@/lib/types';
+
 
 const formSchema = z.object({
   name: z.string().min(2, 'Please enter a valid name.'),
@@ -51,25 +53,29 @@ export default function DriverLoginPage() {
     setIsLoading(true);
 
     try {
-      // 1. Find the driver by name in Firestore
+      // 1. Fetch all drivers from Firestore for case-insensitive matching
       const driversRef = collection(db, 'drivers');
-      const q = query(driversRef, where("name", "==", values.name));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(driversRef);
+      
+      const allDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);
 
-      if (querySnapshot.empty) {
+      // 2. Find the driver by name, ignoring case
+      const driverData = allDrivers.find(
+        (driver) => driver.name.toLowerCase() === values.name.toLowerCase()
+      );
+
+      if (!driverData) {
         throw new Error('Driver not found.');
       }
 
-      // 2. Get the phone number from the driver document
-      const driverDoc = querySnapshot.docs[0];
-      const driverData = driverDoc.data();
+      // 3. Get the phone number from the found driver document
       const phone = driverData.phone;
       
       if (!phone) {
           throw new Error('Driver data is incomplete.');
       }
 
-      // 3. Construct the email and sign in with Firebase Auth
+      // 4. Construct the email and sign in with Firebase Auth
       const email = `${phone}@gasygo.app`;
       
       // The password is the driver's phone number
@@ -92,7 +98,7 @@ export default function DriverLoginPage() {
         errorMessage = 'No driver found with that name.';
       } else if (error.message === 'Invalid password.') {
           errorMessage = 'Incorrect password. The password is your phone number.';
-      } else if (error.code === 'auth/invalid-credential') {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         errorMessage = 'Invalid credentials. Please contact an admin.';
       }
 

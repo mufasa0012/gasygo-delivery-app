@@ -7,17 +7,21 @@ import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { CheckCircle2, Loader2, Package, Truck, PartyPopper, AlertTriangle, XCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, Package, Truck, PartyPopper, AlertTriangle, XCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import type { Order } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Image } from '@imagekit/next';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
+const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap').then(mod => mod.LiveDeliveryMap), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full bg-secondary"><Loader2 className="h-6 w-6 animate-spin"/></div>
+});
 
 const statusSteps = [
   { status: 'Pending', label: 'Order Placed', icon: <Package className="h-6 w-6" /> },
@@ -134,8 +138,8 @@ export default function OrderStatusPage() {
 
 
   const currentStatusIndex = getStatusIndex(order.status);
-  const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-
+  
+  const isTrackingLive = order.status === 'In Progress' && !!order.location;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
@@ -169,17 +173,18 @@ export default function OrderStatusPage() {
                 {/* Map and Driver Info */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="relative w-full h-64 rounded-lg overflow-hidden border">
-                         {imageUrlEndpoint && imageUrlEndpoint.length > 0 && (
-                           <Image 
-                                urlEndpoint={imageUrlEndpoint}
-                                path="gasygo/nairobi-map-placeholder.jpg"
-                                alt={`Map showing delivery area`}
-                                fill
-                                className="object-cover"
-                                data-ai-hint="nairobi map"
-                            />
+                         {order.location ? (
+                           <LiveDeliveryMap 
+                                customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
+                                customerAddress={order.deliveryAddress}
+                                isTracking={isTrackingLive} // Only track if order is in progress
+                           />
+                         ) : (
+                             <div className="flex flex-col items-center justify-center h-full bg-secondary">
+                                <MapPin className="h-8 w-8 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground mt-2">Location data not available for this order.</p>
+                             </div>
                          )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
                      <div>
                         {order.status === 'Pending' && (

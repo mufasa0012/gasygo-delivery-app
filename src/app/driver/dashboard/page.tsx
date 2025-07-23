@@ -7,12 +7,10 @@ import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, MapPin, CheckCircle, Package, AlertCircle, Ship, CircleCheck, CircleX } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Ship, CircleCheck, CircleX } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Image } from '@imagekit/next';
 import { StatCard } from '@/components/dashboard/StatCard';
 import {
   AlertDialog,
@@ -23,12 +21,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { updateOrderStatus } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 
+const LiveDeliveryMap = dynamic(() => import('@/components/order/LiveDeliveryMap').then(mod => mod.LiveDeliveryMap), { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full bg-secondary"><Loader2 className="h-6 w-6 animate-spin"/></div>
+});
 
 // In a real app, this would be the ID of the currently logged-in driver.
 // We'll hardcode one for this prototype.
@@ -54,20 +56,20 @@ export default function DriverDashboardPage() {
         )
     );
     
-    const activeOrders: Order[] = activeOrdersCollection?.docs.map(doc => {
+    const activeOrders: Order[] = useMemo(() => activeOrdersCollection?.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
             createdAt: (data.createdAt as Timestamp)?.toDate ? (data.createdAt as Timestamp).toDate() : new Date(),
         } as Order;
-    }) || [];
+    }) || [], [activeOrdersCollection]);
 
-    const todaysDeliveries = deliveredOrdersCollection?.docs.filter(doc => {
+    const todaysDeliveries = useMemo(() => deliveredOrdersCollection?.docs.filter(doc => {
         const data = doc.data();
         const createdAt = (data.createdAt as Timestamp)?.toDate ? (data.createdAt as Timestamp).toDate() : new Date();
         return format(createdAt, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-    }).length || 0;
+    }).length || 0, [deliveredOrdersCollection]);
 
 
     const handleStatusUpdate = async (orderId: string, newStatus: 'Delivered' | 'Declined') => {
@@ -90,8 +92,6 @@ export default function DriverDashboardPage() {
 
     const loading = loadingActive || loadingDelivered;
     const error = errorActive || errorDelivered;
-    const imageUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
@@ -149,25 +149,19 @@ export default function DriverDashboardPage() {
                                     <p className="text-sm text-muted-foreground">{order.deliveryAddress}</p>
                                 </div>
                                 
-                                <div className="relative w-full h-48 mt-4 rounded-lg overflow-hidden border">
-                                    {imageUrlEndpoint && imageUrlEndpoint.length > 0 && (
-                                        <Image 
-                                            urlEndpoint={imageUrlEndpoint}
-                                            path="gasygo/nairobi-map-placeholder.jpg"
-                                            alt={`Map showing location for ${order.deliveryAddress}`}
-                                            fill
-                                            className="object-cover"
-                                            data-ai-hint="nairobi map"
+                                <div className="relative w-full h-64 mt-4 rounded-lg overflow-hidden border">
+                                    {order.location ? (
+                                        <LiveDeliveryMap 
+                                            customerLocation={{ lat: order.location.latitude, lng: order.location.longitude }}
+                                            customerAddress={order.deliveryAddress}
+                                            isTracking={true}
                                         />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full bg-secondary">
+                                            <MapPin className="h-8 w-8 text-muted-foreground" />
+                                            <p className="text-sm text-muted-foreground mt-2">Location data not available.</p>
+                                        </div>
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                                    <div className="absolute bottom-2 left-2">
-                                        <Button size="sm" asChild>
-                                            <Link href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`} target="_blank" rel="noopener noreferrer">
-                                                <MapPin className="mr-2 h-4 w-4" /> Open in Maps
-                                            </Link>
-                                        </Button>
-                                    </div>
                                 </div>
 
                                  <div className="pt-2">

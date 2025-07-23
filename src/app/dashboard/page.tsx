@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck, Bell, BellOff } from 'lucide-react';
+import { DollarSign, ShoppingCart, Truck, Users, Loader2, UserCheck, Bell, BellOff, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { AssignDriverDropdown } from '@/components/dashboard/AssignDriverDropdown';
 import { useNotificationSound } from '@/hooks/use-notification-sound';
@@ -115,7 +115,6 @@ export default function DashboardPage() {
                             <TableHeader>
                                 <TableRow>
                                 <TableHead>Customer</TableHead>
-                                <TableHead>Address</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Driver</TableHead>
                                 <TableHead className="text-right">Amount</TableHead>
@@ -127,9 +126,8 @@ export default function DashboardPage() {
                                 <TableRow key={order.id}>
                                     <TableCell>
                                     <div className="font-medium">{order.customerName}</div>
-                                    <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
+                                    <div className="text-sm text-muted-foreground max-w-xs truncate">{order.deliveryAddress}</div>
                                     </TableCell>
-                                    <TableCell className="max-w-xs truncate">{order.deliveryAddress}</TableCell>
                                     <TableCell>
                                     <Badge 
                                         variant={
@@ -146,6 +144,14 @@ export default function DashboardPage() {
                                     <TableCell className="text-right">Ksh {order.total.toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
                                         {order.status === 'Pending' && <AssignDriverDropdown order={order} drivers={availableDrivers} />}
+                                        {order.status === 'In Progress' && (
+                                            <Button variant="ghost" size="sm" asChild>
+                                                <Link href={`/order/status/${order.id}`}>
+                                                    <MapPin className="h-4 w-4 mr-2" />
+                                                    Track
+                                                </Link>
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                                 ))}

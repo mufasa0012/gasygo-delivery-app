@@ -14,11 +14,9 @@ import { format } from 'date-fns';
 import { Button } from "../ui/button";
 import { MapPin, MoreHorizontal, Trash2 } from "lucide-react";
 import { AssignDriverDropdown } from "./AssignDriverDropdown";
-import { useCollection } from "react-firebase-hooks/firestore";
-import { collection } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import Link from "next/link";
 
 interface OrdersTableProps {
     orders: Order[];
@@ -93,6 +91,13 @@ export function OrdersTable({ orders, drivers, onDelete }: OrdersTableProps) {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            {order.status === 'In Progress' && (
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/order/status/${order.id}`}>
+                                                        <MapPin className="mr-2 h-4 w-4"/> Track Delivery
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            )}
                                             <AlertDialogTrigger asChild>
                                                  <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                                                     <Trash2 className="mr-2 h-4 w-4"/> Delete

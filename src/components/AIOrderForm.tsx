@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { interpretOrderAction } from '@/app/actions';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ function SubmitButton() {
 }
 
 export function AIOrderForm() {
-  const [state, formAction] = useFormState(interpretOrderAction, initialState);
+  const [state, formAction] = useActionState(interpretOrderAction, initialState);
 
   return (
     <div className="space-y-6">

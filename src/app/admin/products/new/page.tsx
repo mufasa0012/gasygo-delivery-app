@@ -44,8 +44,8 @@ export default function NewProductPage() {
                 </div>
             </div>
              <div className="space-y-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input id="image" placeholder="https://placehold.co/600x600" />
+                <Label htmlFor="image">Product Image</Label>
+                <Input id="image" type="file" />
             </div>
             <Button className="w-full">Add Product</Button>
           </CardContent>

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 // This is a placeholder. In a real app, you'd fetch this data.
 const product = {
@@ -53,9 +54,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     </Select>
                 </div>
             </div>
+            <div className="space-y-2">
+              <Label>Current Image</Label>
+              <Image src={product.image} alt={product.name} width={100} height={100} className="rounded-md" />
+            </div>
              <div className="space-y-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input id="image" defaultValue={product.image} />
+                <Label htmlFor="image">Upload New Image</Label>
+                <Input id="image" type="file" />
             </div>
             <Button className="w-full">Save Changes</Button>
           </CardContent>

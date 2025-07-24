@@ -4,8 +4,15 @@
 import Link from 'next/link';
 import { Flame, Phone, Mail } from 'lucide-react';
 import { Button } from './ui/button';
+import { useEffect, useState } from 'react';
 
 export function Footer() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const socialLinks = [
     { name: 'Facebook', href: '#' },
     { name: 'Twitter', href: '#' },
@@ -91,7 +98,7 @@ export function Footer() {
 
         </div>
         <div className="mt-8 border-t border-border pt-6 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} GasyGo. All rights reserved.</p>
+          {isClient ? <p>&copy; {new Date().getFullYear()} GasyGo. All rights reserved.</p> : <p>GasyGo. All rights reserved.</p>}
         </div>
       </div>
     </footer>

@@ -86,15 +86,19 @@ function AdminSidebar() {
         <div className="w-full h-px bg-sidebar-border" />
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{children: "Driver View"}}>
-                    <Truck/>
-                    <span>Driver View</span>
+                <SidebarMenuButton tooltip={{children: "Driver View"}} asChild>
+                    <Link href="/driver/deliveries">
+                        <Truck/>
+                        <span>Driver View</span>
+                    </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{children: "Log Out"}}>
-                    <LogOut />
-                    <span>Log Out</span>
+                <SidebarMenuButton tooltip={{children: "Log Out"}} asChild>
+                    <Link href="/login">
+                        <LogOut />
+                        <span>Log Out</span>
+                    </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>

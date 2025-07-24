@@ -6,6 +6,7 @@ import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { products } from '@/lib/products';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function ProductsPage() {
   return (
@@ -15,9 +16,11 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-bold tracking-tight font-headline">Products</h1>
           <p className="text-muted-foreground">Manage your gas products and accessories.</p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Product
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Product
+          </Link>
         </Button>
       </div>
       <Card>
@@ -65,7 +68,9 @@ export default function ProductsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

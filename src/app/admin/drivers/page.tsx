@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 export default function DriversPage() {
   return (
@@ -15,9 +15,11 @@ export default function DriversPage() {
           <h1 className="text-3xl font-bold tracking-tight font-headline">Drivers</h1>
           <p className="text-muted-foreground">Manage your delivery drivers.</p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Driver
+        <Button asChild>
+            <Link href="/admin/drivers/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Driver
+            </Link>
         </Button>
       </div>
       <Card>
@@ -41,7 +43,7 @@ export default function DriversPage() {
             <TableBody>
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  No drivers found.
+                  No drivers found. Add one to get started.
                 </TableCell>
               </TableRow>
             </TableBody>

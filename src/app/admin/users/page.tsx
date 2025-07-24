@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 export default function UsersPage() {
   return (
@@ -14,10 +14,12 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold tracking-tight font-headline">Users</h1>
           <p className="text-muted-foreground">Manage all registered users and administrators.</p>
         </div>
-         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+         <Button asChild>
+            <Link href="/admin/users/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add User
+            </Link>
+         </Button>
       </div>
       <Card>
         <CardHeader>

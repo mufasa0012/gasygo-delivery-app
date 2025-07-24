@@ -7,16 +7,74 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import * as React from 'react';
+import { db } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const [loading, setLoading] = React.useState(false);
+  const [settings, setSettings] = React.useState({
+    businessName: 'GasyGo',
+    contactEmail: 'mosesissa810@gmail.com',
+    contactPhone: '+254704095021',
+    emailNotifications: true,
+    smsNotifications: false,
+  });
 
-  const handleSaveChanges = () => {
-    toast({
-      title: "Settings Saved!",
-      description: "Your changes have been successfully saved.",
-    });
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+        setLoading(true);
+        const docRef = doc(db, 'settings', 'businessInfo');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            setSettings(docSnap.data() as any);
+        }
+        setLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setSettings(prev => ({ ...prev, [id]: value }));
+  }
+
+  const handleSwitchChange = (id: string, checked: boolean) => {
+    setSettings(prev => ({ ...prev, [id]: checked }));
+  }
+
+  const handleSaveChanges = async () => {
+    setLoading(true);
+    try {
+      // Using 'businessInfo' as the document ID to store all settings in one document
+      await setDoc(doc(db, 'settings', 'businessInfo'), settings, { merge: true });
+      toast({
+        title: "Settings Saved!",
+        description: "Your changes have been successfully saved.",
+      });
+    } catch (error) {
+      console.error("Error saving settings: ", error);
+      toast({
+        title: "Error",
+        description: "Could not save settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+        <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -32,19 +90,21 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="business-name">Business Name</Label>
-                <Input id="business-name" placeholder="GasyGo" defaultValue="GasyGo" />
+                <Input id="businessName" value={settings.businessName} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact-email">Contact Email</Label>
-                <Input id="contact-email" type="email" placeholder="mosesissa810@gmail.com" defaultValue="mosesissa810@gmail.com" />
+                <Input id="contactEmail" type="email" value={settings.contactEmail} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact-phone">Contact Phone</Label>
-                <Input id="contact-phone" type="tel" placeholder="+254704095021" defaultValue="+254704095021" />
+                <Input id="contactPhone" type="tel" value={settings.contactPhone} onChange={handleInputChange} />
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleSaveChanges}>Save Changes</Button>
+              <Button onClick={handleSaveChanges} disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : 'Save Changes'}
+              </Button>
             </CardFooter>
           </Card>
           
@@ -59,18 +119,29 @@ export default function SettingsPage() {
                   <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">Receive an email for new orders and system alerts.</p>
                 </div>
-                <Switch id="email-notifications" defaultChecked />
+                <Switch 
+                  id="email-notifications" 
+                  checked={settings.emailNotifications} 
+                  onCheckedChange={(checked) => handleSwitchChange('emailNotifications', checked)} 
+                />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <Label htmlFor="sms-notifications" className="text-base">SMS Notifications</Label>
                    <p className="text-sm text-muted-foreground">Get text message alerts for urgent matters.</p>
                 </div>
-                <Switch id="sms-notifications" disabled />
+                <Switch 
+                  id="sms-notifications" 
+                  checked={settings.smsNotifications} 
+                  onCheckedChange={(checked) => handleSwitchChange('smsNotifications', checked)}
+                  disabled 
+                />
               </div>
             </CardContent>
              <CardFooter>
-              <Button onClick={handleSaveChanges}>Save Notification Settings</Button>
+              <Button onClick={handleSaveChanges} disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : 'Save Notification Settings'}
+              </Button>
             </CardFooter>
           </Card>
         </div>

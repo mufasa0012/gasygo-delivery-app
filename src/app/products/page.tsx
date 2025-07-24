@@ -2,11 +2,28 @@
 
 'use client';
 
+import * as React from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
-import { products } from '@/lib/products';
+import type { Product } from '@/lib/products';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ProductsPage() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+      const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Product, 'id'>) }));
+      setProducts(productsData);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -22,9 +39,22 @@ export default function ProductsPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {loading ? (
+                Array.from({ length: 8 }).map((_, index) => (
+                    <Card key={index}>
+                        <CardContent className="p-4 flex flex-col gap-4">
+                            <Skeleton className="aspect-square w-full" />
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-10 w-1/2" />
+                        </CardContent>
+                    </Card>
+                ))
+              ) : (
+                products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                ))
+              )}
             </div>
           </div>
         </section>

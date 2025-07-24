@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, ShoppingCart, MapPin, Truck, MoveRight } from 'lucide-react';
-import { products } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { ProductCard } from '@/components/ProductCard';
 import {
   Carousel,
@@ -16,8 +16,24 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function Home() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+      const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Product, 'id'>) }));
+      setProducts(productsData);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
@@ -117,18 +133,35 @@ export default function Home() {
                      <Carousel 
                         opts={{
                             align: "start",
-                            loop: true,
+                            loop: products.length > 3,
                         }}
                         className="w-full max-w-sm md:max-w-4xl lg:max-w-6xl mx-auto"
                     >
                         <CarouselContent className="-ml-4">
-                            {products.map(product => (
-                                <CarouselItem key={product.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                                    <div className="p-1 h-full">
-                                         <ProductCard product={product} />
-                                    </div>
-                                </CarouselItem>
-                            ))}
+                            {loading ? (
+                                Array.from({ length: 3 }).map((_, index) => (
+                                    <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                        <div className="p-1 h-full">
+                                            <Card className="h-full">
+                                                <CardContent className="p-4 flex flex-col gap-4">
+                                                    <Skeleton className="aspect-square w-full" />
+                                                    <Skeleton className="h-6 w-3/4" />
+                                                    <Skeleton className="h-4 w-full" />
+                                                    <Skeleton className="h-10 w-1/2" />
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    </CarouselItem>
+                                ))
+                            ) : (
+                                products.map(product => (
+                                    <CarouselItem key={product.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                        <div className="p-1 h-full">
+                                            <ProductCard product={product} />
+                                        </div>
+                                    </CarouselItem>
+                                ))
+                            )}
                         </CarouselContent>
                         <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
                         <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />

@@ -1,10 +1,10 @@
 export interface Product {
-  id: number;
+  id: any;
   name: string;
   price: number;
   description: string;
   image: string;
-  category: 'cylinder' | 'accessory';
+  category: 'cylinder' | 'accessory' | '';
   hint: string;
 }
 

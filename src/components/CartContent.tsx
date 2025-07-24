@@ -34,7 +34,7 @@ export function CartContent() {
         <Separator />
         <div className="flex justify-between items-center py-4 text-lg font-semibold">
           <span>Subtotal</span>
-          <span>${totalPrice.toFixed(2)}</span>
+          <span>Ksh{totalPrice.toFixed(2)}</span>
         </div>
         <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
           Proceed to Checkout

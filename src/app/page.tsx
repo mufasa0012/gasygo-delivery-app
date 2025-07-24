@@ -23,25 +23,32 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="w-full bg-primary/5">
-          <div className="container px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center min-h-[70vh] py-16">
+          <div className="container px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center py-16 md:py-24">
             <div className="space-y-6 text-center md:text-left">
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl font-headline">
                 Your Reliable Gas Partner,{' '}
                 <span className="text-primary">Delivered!</span>
               </h1>
-              <p className="max-w-2xl text-lg text-muted-foreground">
+              <p className="max-w-2xl text-lg text-muted-foreground mx-auto md:mx-0">
                 Get K-Gas, Total Gas, Afrigas, and more, delivered fast and
                 free right to your doorstep in Nairobi.
               </p>
-              <Button asChild size="lg" className="text-lg px-8 py-6">
-                <Link href="/ai-order">
-                  Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Button asChild size="lg" className="text-lg px-8 py-6">
+                  <Link href="/ai-order">
+                    Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                 <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
+                    <Link href="#products">
+                        Browse Products
+                    </Link>
+                </Button>
+              </div>
             </div>
-            <div className="relative h-64 md:h-[400px] w-full">
+            <div className="relative h-64 md:h-[450px] w-full">
               <Image
-                src="https://placehold.co/600x400.png"
+                src="https://placehold.co/600x450.png"
                 alt="Gas delivery"
                 layout="fill"
                 objectFit="cover"
@@ -98,7 +105,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="w-full py-20 md:py-28 bg-muted/20">
+        <section id="products" className="w-full py-20 md:py-28 bg-muted/20">
             <div className="container px-4 md:px-6">
                  <div className="text-center max-w-3xl mx-auto">
                     <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl font-headline">Our Popular Products</h2>
@@ -112,12 +119,12 @@ export default function Home() {
                             align: "start",
                             loop: true,
                         }}
-                        className="w-full"
+                        className="w-full max-w-sm md:max-w-4xl lg:max-w-6xl mx-auto"
                     >
-                        <CarouselContent>
+                        <CarouselContent className="-ml-4">
                             {products.map(product => (
-                                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3">
-                                    <div className="p-1">
+                                <CarouselItem key={product.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                    <div className="p-1 h-full">
                                          <ProductCard product={product} />
                                     </div>
                                 </CarouselItem>
@@ -129,7 +136,7 @@ export default function Home() {
                 </div>
                  <div className="mt-12 text-center">
                     <Button asChild variant="outline" size="lg">
-                        <Link href="#">
+                        <Link href="/products">
                             View All Products <MoveRight className="ml-2 h-5 w-5" />
                         </Link>
                     </Button>

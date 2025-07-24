@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Flame, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Flame, ArrowRight, ShoppingCart, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import {
@@ -14,9 +14,18 @@ import {
 } from '@/components/ui/sheet';
 import { CartContent } from './CartContent';
 import { Badge } from './ui/badge';
+import React from 'react';
 
 export function Header() {
   const { totalItems } = useCart();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const navLinks = [
+      { href: '/', label: 'Home' },
+      { href: '/products', label: 'Products' },
+      { href: '/ai-order', label: 'Order Now' },
+      { href: '#', label: 'Contact Us' },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -28,17 +37,13 @@ export function Header() {
           </span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-lg font-medium">
-          <Button variant="link" asChild className="text-foreground text-base">
-            <Link href="/">Home</Link>
-          </Button>
-          <Button variant="link" asChild className="text-foreground text-base">
-            <Link href="/ai-order">Order Now</Link>
-          </Button>
-          <Button variant="link" asChild className="text-foreground text-base">
-            <Link href="#">Contact Us</Link>
-          </Button>
+          {navLinks.map(link => (
+               <Button key={link.href} variant="link" asChild className="text-foreground text-base">
+                <Link href={link.href}>{link.label}</Link>
+               </Button>
+          ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative">
@@ -67,8 +72,32 @@ export function Header() {
                   <ArrowRight className="h-5 w-5"/>
               </Link>
           </Button>
+           <div className="md:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                  {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+           </div>
         </div>
       </div>
+       {isMenuOpen && (
+        <div className="md:hidden bg-background/95 pb-4">
+          <nav className="container flex flex-col gap-4">
+             {navLinks.map(link => (
+               <Button key={link.href} variant="link" asChild className="text-foreground text-base justify-start">
+                <Link href={link.href}>{link.label}</Link>
+               </Button>
+            ))}
+             <Button asChild>
+                <Link href="/login">Login</Link>
+             </Button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

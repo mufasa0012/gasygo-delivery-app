@@ -55,7 +55,7 @@ export default function ProductsPage() {
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">Ksh{product.price.toFixed(2)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

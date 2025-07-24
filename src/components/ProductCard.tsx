@@ -33,7 +33,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 bg-muted/20 mt-auto">
         <p className="text-xl font-bold text-foreground">
-          ${product.price.toFixed(2)}
+          Ksh{product.price.toFixed(2)}
         </p>
         <Button onClick={() => addToCart(product)} size="sm">
           <ShoppingCart className="mr-2 h-4 w-4" />

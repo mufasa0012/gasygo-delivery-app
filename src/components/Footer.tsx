@@ -38,7 +38,7 @@ export function Footer() {
               </li>
               <li>
                 <Button variant="link" asChild className="p-0 text-background h-auto">
-                  <Link href="#">Contact Us</Link>
+                  <Link href="/contact">Contact Us</Link>
                 </Button>
               </li>
               <li>

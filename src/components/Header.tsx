@@ -24,7 +24,7 @@ export function Header() {
       { href: '/', label: 'Home' },
       { href: '/products', label: 'Products' },
       { href: '/ai-order', label: 'Order Now' },
-      { href: '#', label: 'Contact Us' },
+      { href: '/contact', label: 'Contact Us' },
   ];
 
   return (

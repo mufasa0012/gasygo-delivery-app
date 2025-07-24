@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -42,7 +43,7 @@ export function Footer() {
               </li>
               <li>
                 <Button variant="link" asChild className="p-0 text-background h-auto">
-                  <Link href="#">Admin/Driver Login</Link>
+                  <Link href="/login">Admin/Driver Login</Link>
                 </Button>
               </li>
             </ul>

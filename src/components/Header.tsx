@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -61,7 +62,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <Button variant="ghost" asChild className="hidden md:flex items-center gap-2">
-              <Link href="#">
+              <Link href="/login">
                   <span>Login</span>
                   <ArrowRight className="h-5 w-5"/>
               </Link>

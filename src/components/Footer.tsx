@@ -98,7 +98,9 @@ export function Footer() {
 
         </div>
         <div className="mt-8 border-t border-border pt-6 text-center text-muted-foreground">
-          {isClient ? <p>&copy; {new Date().getFullYear()} GasyGo. All rights reserved.</p> : <p>GasyGo. All rights reserved.</p>}
+          <p>
+            {isClient ? `© ${new Date().getFullYear()} GasyGo. All rights reserved.` : 'GasyGo. All rights reserved.'}
+          </p>
         </div>
       </div>
     </footer>

@@ -46,7 +46,7 @@ export default function LoginPage() {
                     </CardHeader>
                     <CardContent>
                          <Button asChild size="lg" className="w-full">
-                            <Link href="/driver/deliveries">
+                            <Link href="/driver/login">
                                 Continue as Driver <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </Button>

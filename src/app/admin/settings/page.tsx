@@ -31,9 +31,11 @@ export default function SettingsPage() {
     emailNotifications: true,
     smsNotifications: false,
     businessLogoUrl: '',
+    heroImageUrl: '',
     primaryColor: '221 83% 53%', // Default primary color HSL
   });
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [heroImageFile, setHeroImageFile] = React.useState<File | null>(null);
 
   React.useEffect(() => {
     const fetchSettings = async () => {
@@ -57,7 +59,12 @@ export default function SettingsPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
+       const { id, files } = e.target;
+       if (id === 'logo') {
+        setLogoFile(files[0]);
+       } else if (id === 'heroImage') {
+        setHeroImageFile(files[0]);
+       }
     }
   };
 
@@ -70,29 +77,35 @@ export default function SettingsPage() {
     try {
       let updatedSettings = { ...settings };
 
-      if (logoFile) {
-        // 1. Get ImageKit authentication
+      const uploadImage = async (file: File) => {
         const authResponse = await fetch('/api/imagekit-auth');
         if (!authResponse.ok) {
             throw new Error('Failed to get ImageKit auth credentials');
         }
         const authData = await authResponse.json();
 
-        // 2. Upload image to ImageKit
         const uploadResult = await imageKit.upload({
-            file: logoFile,
-            fileName: logoFile.name,
+            file: file,
+            fileName: file.name,
             token: authData.token,
             expire: authData.expire,
             signature: authData.signature,
         });
-        updatedSettings.businessLogoUrl = uploadResult.url;
+        return uploadResult.url;
+      }
+
+      if (logoFile) {
+        updatedSettings.businessLogoUrl = await uploadImage(logoFile);
+      }
+      if (heroImageFile) {
+        updatedSettings.heroImageUrl = await uploadImage(heroImageFile);
       }
 
       // Using 'businessInfo' as the document ID to store all settings in one document
       await setDoc(doc(db, 'settings', 'businessInfo'), updatedSettings, { merge: true });
       setSettings(updatedSettings);
       setLogoFile(null);
+      setHeroImageFile(null);
       
       // Also update the CSS variable for immediate feedback
       if (updatedSettings.primaryColor) {
@@ -148,7 +161,7 @@ export default function SettingsPage() {
                 <Label htmlFor="contactPhone">Contact Phone</Label>
                 <Input id="contactPhone" type="tel" value={settings.contactPhone} onChange={handleInputChange} />
               </div>
-              {settings.businessLogoUrl && (
+              {settings.businessLogoUrl && !logoFile && (
                 <div className="space-y-2">
                   <Label>Current Logo</Label>
                   <Image src={settings.businessLogoUrl} alt="Business Logo" width={100} height={100} className="rounded-md border p-2" />
@@ -168,7 +181,7 @@ export default function SettingsPage() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Theme</CardTitle>
+              <CardTitle>Theme & Appearance</CardTitle>
               <CardDescription>Customize the look and feel of your application.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -183,6 +196,16 @@ export default function SettingsPage() {
                  <p className="text-sm text-muted-foreground">
                     Enter a color in HSL format (e.g., "221 83% 53%"). Find colors at <a href="https://hslpicker.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">hslpicker.com</a>.
                 </p>
+              </div>
+               {settings.heroImageUrl && !heroImageFile && (
+                <div className="space-y-2">
+                  <Label>Current Hero Image</Label>
+                  <Image src={settings.heroImageUrl} alt="Hero Image" width={200} height={150} className="rounded-md border p-2 object-cover" />
+                </div>
+              )}
+               <div className="space-y-2">
+                <Label htmlFor="heroImage">Homepage Hero Image</Label>
+                <Input id="heroImage" type="file" onChange={handleImageChange} />
               </div>
             </CardContent>
              <CardFooter>

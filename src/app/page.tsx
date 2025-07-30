@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,7 +17,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -24,6 +25,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Home() {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [heroImageUrl, setHeroImageUrl] = React.useState('https://placehold.co/1200x600.png');
+  const [loadingHero, setLoadingHero] = React.useState(true);
 
   React.useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
@@ -31,6 +34,19 @@ export default function Home() {
       setProducts(productsData);
       setLoading(false);
     });
+    
+    const fetchSettings = async () => {
+        setLoadingHero(true);
+        const docRef = doc(db, 'settings', 'businessInfo');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists() && docSnap.data().heroImageUrl) {
+            setHeroImageUrl(docSnap.data().heroImageUrl);
+        }
+        setLoadingHero(false);
+    };
+    
+    fetchSettings();
     return () => unsubscribe();
   }, []);
 
@@ -39,17 +55,17 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="w-full bg-primary/5">
-          <div className="container px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center py-16 md:py-24">
-            <div className="space-y-6 text-center md:text-left">
+          <div className="container px-4 md:px-6 flex flex-col items-center text-center py-16 md:py-24">
+            <div className="space-y-6 max-w-4xl">
               <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl font-headline">
                 Your Reliable Gas Partner,{' '}
                 <span className="text-primary">Delivered!</span>
               </h1>
-              <p className="max-w-2xl text-lg text-muted-foreground mx-auto md:mx-0">
+              <p className="max-w-2xl text-lg text-muted-foreground mx-auto">
                 Get K-Gas, Total Gas, Afrigas, and more, delivered fast and
                 free right to your doorstep in Nairobi.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="text-lg px-8 py-6">
                   <Link href="/ai-order">
                     Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
@@ -62,15 +78,20 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-            <div className="relative h-64 md:h-[450px] w-full">
-              <Image
-                src="https://placehold.co/600x450.png"
-                alt="Gas delivery"
-                layout="fill"
-                objectFit="cover"
-                className="rounded-xl"
-                data-ai-hint="gas delivery scooter"
-              />
+             <div className="relative h-64 md:h-[500px] w-full max-w-6xl mt-12">
+                {loadingHero ? (
+                    <Skeleton className="h-full w-full rounded-xl" />
+                ) : (
+                    <Image
+                        src={heroImageUrl}
+                        alt="Gas delivery"
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-xl"
+                        data-ai-hint="gas delivery scooter"
+                        priority
+                    />
+                )}
             </div>
           </div>
         </section>

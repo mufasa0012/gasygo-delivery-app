@@ -3,7 +3,6 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,7 +17,7 @@ const initialAdviceState = {
 };
 
 function AIBusinessCoach() {
-  const [state, formAction, isPending] = useActionState(getAdviceAction, initialAdviceState);
+  const [state, formAction, isPending] = React.useActionState(getAdviceAction, initialAdviceState);
 
   return (
       <Card>

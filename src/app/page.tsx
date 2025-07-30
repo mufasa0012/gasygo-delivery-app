@@ -54,46 +54,47 @@ export default function Home() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <section className="w-full bg-primary/5">
-          <div className="container px-4 md:px-6 flex flex-col items-center text-center py-16 md:py-24">
-            <div className="space-y-6 max-w-4xl">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl font-headline">
-                Your Reliable Gas Partner,{' '}
-                <span className="text-primary">Delivered!</span>
-              </h1>
-              <p className="max-w-2xl text-lg text-muted-foreground mx-auto">
-                Get K-Gas, Total Gas, Afrigas, and more, delivered fast and
-                free right to your doorstep in Nairobi.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="text-lg px-8 py-6">
-                  <Link href="/ai-order">
-                    Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                 <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
-                    <Link href="#products">
-                        Browse Products
-                    </Link>
-                </Button>
-              </div>
+        <section className="w-full">
+            <div className="container px-4 md:px-6">
+                <div className="relative h-[500px] md:h-[600px] w-full mt-8 rounded-xl overflow-hidden flex items-center justify-center text-center">
+                    {loadingHero ? (
+                        <Skeleton className="h-full w-full" />
+                    ) : (
+                        <Image
+                            src={heroImageUrl}
+                            alt="Gas delivery"
+                            layout="fill"
+                            objectFit="cover"
+                            className="z-0"
+                            data-ai-hint="gas delivery scooter"
+                            priority
+                        />
+                    )}
+                    <div className="absolute inset-0 bg-black/50 z-10"></div>
+                    <div className="relative z-20 space-y-6 max-w-4xl px-4">
+                        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl font-headline">
+                            Your Reliable Gas Partner,{' '}
+                            <span className="text-primary">Delivered!</span>
+                        </h1>
+                        <p className="max-w-2xl text-lg text-primary-foreground/90 mx-auto">
+                            Get K-Gas, Total Gas, Afrigas, and more, delivered fast and
+                            free right to your doorstep in Nairobi.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Button asChild size="lg" className="text-lg px-8 py-6">
+                            <Link href="/ai-order">
+                                Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                            </Button>
+                            <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-6">
+                                <Link href="#products">
+                                    Browse Products
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </div>
-             <div className="relative h-64 md:h-[500px] w-full max-w-6xl mt-12">
-                {loadingHero ? (
-                    <Skeleton className="h-full w-full rounded-xl" />
-                ) : (
-                    <Image
-                        src={heroImageUrl}
-                        alt="Gas delivery"
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-xl"
-                        data-ai-hint="gas delivery scooter"
-                        priority
-                    />
-                )}
-            </div>
-          </div>
         </section>
 
         <section className="w-full py-20 md:py-28">

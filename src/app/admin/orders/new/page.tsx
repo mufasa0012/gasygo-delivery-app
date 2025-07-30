@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { collection, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/products';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface Driver {
     id: string;
     name: string;
+    status: 'Available' | 'On Delivery' | 'Offline';
 }
 
 export default function NewOrderPage() {
@@ -37,7 +38,7 @@ export default function NewOrderPage() {
         });
 
         const unsubscribeDrivers = onSnapshot(collection(db, 'drivers'), (snapshot) => {
-            const driversData = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+            const driversData = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Driver, 'id'>) }));
             setDrivers(driversData);
             setLoadingDrivers(false);
         });
@@ -75,7 +76,9 @@ export default function NewOrderPage() {
 
     const calculateTotal = () => {
         if (!selectedProduct) return 0;
-        return selectedProduct.price * parseInt(formData.quantity, 10);
+        const quantity = parseInt(formData.quantity, 10);
+        if (isNaN(quantity) || quantity < 1) return 0;
+        return selectedProduct.price * quantity;
     }
 
     const handleCreateOrder = async () => {
@@ -89,11 +92,25 @@ export default function NewOrderPage() {
         }
         setLoading(true);
 
+        const driver = drivers.find(d => d.id === formData.driverId);
+        const orderItems = selectedProduct ? [{
+            productId: selectedProduct.id,
+            name: selectedProduct.name,
+            quantity: parseInt(formData.quantity, 10),
+            price: selectedProduct.price
+        }] : [];
+
         try {
             await addDoc(collection(db, 'orders'), {
-                ...formData,
-                quantity: parseInt(formData.quantity, 10),
+                customerName: formData.customerName,
+                customerPhone: formData.customerPhone,
+                deliveryAddress: formData.deliveryAddress,
+                notes: formData.notes,
+                items: orderItems,
                 totalPrice: calculateTotal(),
+                status: formData.status,
+                driverId: formData.driverId || null,
+                driverName: driver ? driver.name : null,
                 createdAt: new Date(),
             });
 
@@ -210,7 +227,9 @@ export default function NewOrderPage() {
                         <SelectContent>
                              <SelectItem value="unassigned">Unassigned</SelectItem>
                             {drivers.map(driver => (
-                                <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
+                                <SelectItem key={driver.id} value={driver.id} disabled={driver.status !== 'Available'}>
+                                    {driver.name} ({driver.status})
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>

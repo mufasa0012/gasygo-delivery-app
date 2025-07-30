@@ -68,7 +68,7 @@ function OrderDetailsPage() {
         if (doc.exists()) {
             const orderData = { id: doc.id, ...doc.data() } as Order;
             setOrder(orderData);
-            setSelectedDriver(orderData.driverId || '');
+            setSelectedDriver(orderData.driverId || 'unassigned');
             setSelectedStatus(orderData.status);
         } else {
             toast({ variant: 'destructive', title: 'Not Found', description: "Could not find the requested order." });
@@ -93,11 +93,12 @@ function OrderDetailsPage() {
     setSaving(true);
     try {
         const orderRef = doc(db, "orders", order.id);
-        const driver = drivers.find(d => d.id === selectedDriver);
+        const isDriverAssigned = selectedDriver !== 'unassigned';
+        const driver = isDriverAssigned ? drivers.find(d => d.id === selectedDriver) : null;
         
         await updateDoc(orderRef, {
             status: selectedStatus,
-            driverId: selectedDriver || null,
+            driverId: isDriverAssigned ? selectedDriver : null,
             driverName: driver ? driver.name : null,
         });
 
@@ -232,7 +233,7 @@ function OrderDetailsPage() {
                                 <SelectValue placeholder="Select a driver" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">Unassigned</SelectItem>
+                                <SelectItem value="unassigned">Unassigned</SelectItem>
                                 {drivers.map(driver => (
                                     <SelectItem key={driver.id} value={driver.id} disabled={driver.status !== 'Available'}>
                                         {driver.name} ({driver.status})

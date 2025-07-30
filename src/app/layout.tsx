@@ -5,6 +5,7 @@ import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { Footer } from "@/components/Footer";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const poppins = Poppins({ 
   subsets: ["latin"], 
@@ -30,11 +31,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn("font-body antialiased", poppins.variable)}>
-        <CartProvider>
-          {children}
-          <Toaster />
-          <Footer />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            {children}
+            <Toaster />
+            <Footer />
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -31,6 +31,7 @@ export default function SettingsPage() {
     emailNotifications: true,
     smsNotifications: false,
     businessLogoUrl: '',
+    primaryColor: '221 83% 53%', // Default primary color HSL
   });
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
 
@@ -92,6 +93,12 @@ export default function SettingsPage() {
       await setDoc(doc(db, 'settings', 'businessInfo'), updatedSettings, { merge: true });
       setSettings(updatedSettings);
       setLogoFile(null);
+      
+      // Also update the CSS variable for immediate feedback
+      if (updatedSettings.primaryColor) {
+        document.documentElement.style.setProperty('--primary-hsl', updatedSettings.primaryColor);
+      }
+
 
       toast({
         title: "Settings Saved!",
@@ -159,6 +166,33 @@ export default function SettingsPage() {
             </CardFooter>
           </Card>
           
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme</CardTitle>
+              <CardDescription>Customize the look and feel of your application.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="space-y-2">
+                <Label htmlFor="primaryColor">Primary Color (HSL)</Label>
+                <Input 
+                  id="primaryColor" 
+                  value={settings.primaryColor} 
+                  onChange={handleInputChange}
+                  placeholder="e.g., 221 83% 53%"
+                 />
+                 <p className="text-sm text-muted-foreground">
+                    Enter a color in HSL format (e.g., "221 83% 53%"). Find colors at <a href="https://hslpicker.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">hslpicker.com</a>.
+                </p>
+              </div>
+            </CardContent>
+             <CardFooter>
+              <Button onClick={handleSaveChanges} disabled={saving}>
+                {saving ? <Loader2 className="animate-spin" /> : 'Save Theme'}
+              </Button>
+            </CardFooter>
+          </Card>
+
+
           <Card>
             <CardHeader>
               <CardTitle>Notifications</CardTitle>

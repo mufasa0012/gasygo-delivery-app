@@ -150,7 +150,7 @@ function OrderDetailsPage({ google }: { google: any }) {
                  <CardContent className="space-y-4">
                     <div className="flex items-center gap-4"><Phone className="w-4 h-4 text-muted-foreground"/> <span>{order.customerName} - {order.customerPhone}</span></div>
                     <div className="flex items-start gap-4"><MapPin className="w-4 h-4 text-muted-foreground mt-1"/> <p>{order.deliveryAddress}</p></div>
-                    {latLng && (
+                    {latLng && google && (
                        <div className="relative h-64">
                          <Map
                            google={google}
@@ -242,6 +242,21 @@ function OrderDetailsPage({ google }: { google: any }) {
   );
 }
 
-export default GoogleApiWrapper({
-    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
-})(OrderDetailsPage)
+const OrderDetailsPageWrapper = GoogleApiWrapper({
+    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    LoadingContainer: () => (
+      <div className="flex flex-1 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    ),
+  })(OrderDetailsPage);
+  
+export default function Page() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <OrderDetailsPageWrapper />
+        </React.Suspense>
+    )
+}
+
+    

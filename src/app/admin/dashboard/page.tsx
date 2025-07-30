@@ -13,7 +13,7 @@ import { getAdviceAction } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const initialAdviceState = {
-  advice: 'Click the button to get your first tip!',
+  advice: 'Click a button to get your first tip!',
 };
 
 function AIBusinessCoach() {
@@ -54,11 +54,17 @@ function AIBusinessCoach() {
                   </p>
               )}
           </CardContent>
-           <CardFooter>
+           <CardFooter className="gap-2">
+                <form action={formAction} className="w-full">
+                    <input type="hidden" name="topic" value="Business Growth" />
+                    <Button type="submit" size="sm" variant="ghost" disabled={isPending} className="w-full justify-start">
+                        Get Business Growth Tip
+                    </Button>
+                </form>
                 <form action={formAction} className="w-full">
                     <input type="hidden" name="topic" value="Customer Retention" />
-                    <Button type="submit" size="sm" variant="ghost" disabled={isPending}>
-                        Get Customer Retention Tip
+                    <Button type="submit" size="sm" variant="ghost" disabled={isPending} className="w-full justify-start">
+                        Get Retention Tip
                     </Button>
                 </form>
             </CardFooter>

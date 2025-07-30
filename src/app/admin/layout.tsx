@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -39,6 +40,11 @@ const menuItems = [
   { href: '/admin/drivers', icon: Truck, label: 'Drivers' },
   { href: '/admin/users', icon: Users, label: 'Users' },
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
+];
+
+const bottomMenuItems = [
+    { href: '/driver/deliveries', icon: Truck, label: 'Driver View' },
+    { href: '/login', icon: LogOut, label: 'Log Out' },
 ];
 
 function AdminSidebar() {
@@ -82,25 +88,25 @@ function AdminSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="flex-col !items-start gap-4">
+      <SidebarFooter>
         <div className="w-full h-px bg-sidebar-border" />
         <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{children: "Driver View"}} asChild>
-                    <Link href="/driver/deliveries">
-                        <Truck/>
-                        <span>Driver View</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{children: "Log Out"}} asChild>
-                    <Link href="/login">
-                        <LogOut />
-                        <span>Log Out</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
+            {bottomMenuItems.map((item) => (
+                 <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith(item.href)}
+                    tooltip={{
+                        children: item.label,
+                    }}
+                    >
+                        <Link href={item.href}>
+                            <item.icon />
+                            <span>{item.label}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                 </SidebarMenuItem>
+            ))}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

@@ -13,25 +13,39 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/products';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Mock driver data - in a real app, this would also come from Firestore
-const drivers = [
-    { id: 'driver1', name: 'John Doe' },
-    { id: 'driver2', name: 'Jane Smith' },
-];
+interface Driver {
+    id: string;
+    name: string;
+}
 
 export default function NewOrderPage() {
     const { toast } = useToast();
     const [loading, setLoading] = React.useState(false);
     const [products, setProducts] = React.useState<Product[]>([]);
+    const [drivers, setDrivers] = React.useState<Driver[]>([]);
+    const [loadingProducts, setLoadingProducts] = React.useState(true);
+    const [loadingDrivers, setLoadingDrivers] = React.useState(true);
     const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
 
     React.useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+        const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
             const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Product, 'id'>) }));
             setProducts(productsData);
+            setLoadingProducts(false);
         });
-        return () => unsubscribe();
+
+        const unsubscribeDrivers = onSnapshot(collection(db, 'drivers'), (snapshot) => {
+            const driversData = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+            setDrivers(driversData);
+            setLoadingDrivers(false);
+        });
+
+        return () => {
+            unsubscribeProducts();
+            unsubscribeDrivers();
+        };
     }, []);
     
     // Form state
@@ -151,6 +165,7 @@ export default function NewOrderPage() {
                      <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="productId">Product</Label>
+                            {loadingProducts ? <Skeleton className="h-10 w-full" /> : (
                              <Select onValueChange={(value) => handleSelectChange('productId', value)} value={formData.productId}>
                                 <SelectTrigger id="productId">
                                     <SelectValue placeholder="Select a product" />
@@ -161,6 +176,7 @@ export default function NewOrderPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                            )}
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="quantity">Quantity</Label>
@@ -186,6 +202,7 @@ export default function NewOrderPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="driverId">Assign Driver</Label>
+                     {loadingDrivers ? <Skeleton className="h-10 w-full" /> : (
                     <Select onValueChange={(value) => handleSelectChange('driverId', value)} value={formData.driverId || 'unassigned'}>
                         <SelectTrigger id="driverId">
                             <SelectValue placeholder="Select a driver" />
@@ -197,6 +214,7 @@ export default function NewOrderPage() {
                             ))}
                         </SelectContent>
                     </Select>
+                    )}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="status">Order Status</Label>

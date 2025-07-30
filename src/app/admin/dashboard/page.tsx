@@ -126,8 +126,8 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
             <CardDescription>A list of the most recent orders.</CardDescription>
@@ -155,8 +155,10 @@ export default function AdminDashboard() {
             </Table>
           </CardContent>
         </Card>
-        <AIBusinessCoach />
       </div>
+       <div className="grid gap-4 md:gap-8">
+            <AIBusinessCoach />
+       </div>
     </div>
   );
 }

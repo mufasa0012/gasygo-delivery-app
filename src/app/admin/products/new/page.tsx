@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UploadCloud, X } from 'lucide-react';
 import ImageKit from 'imagekit-javascript';
+import Image from 'next/image';
 
 const imageKit = new ImageKit({
     publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
@@ -22,6 +23,7 @@ const imageKit = new ImageKit({
 export default function NewProductPage() {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const [productData, setProductData] = React.useState({
     name: '',
     description: '',
@@ -41,9 +43,22 @@ export default function NewProductPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProductData((prev) => ({ ...prev, image: e.target.files![0] }));
+      const file = e.target.files[0];
+      setProductData((prev) => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
+
+  const removeImage = () => {
+    setProductData(prev => ({...prev, image: null}));
+    setImagePreview(null);
+    // A type assertion is used to reset the file input
+    (document.getElementById('image') as HTMLInputElement).value = '';
+  }
 
   const handleAddProduct = async () => {
     if (!productData.name || !productData.price || !productData.category || !productData.image) {
@@ -99,8 +114,7 @@ export default function NewProductPage() {
           category: '',
           image: null,
       });
-      // A type assertion is used to reset the file input
-      (document.getElementById('image') as HTMLInputElement).value = '';
+      removeImage();
 
 
     } catch (error) {
@@ -127,7 +141,23 @@ export default function NewProductPage() {
           <CardContent className="space-y-4">
              <div className="space-y-2">
                 <Label htmlFor="image">Product Image</Label>
-                <Input id="image" type="file" onChange={handleImageChange} />
+                 <div className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
+                    {imagePreview ? (
+                        <>
+                            <Image src={imagePreview} alt="Product preview" layout="fill" objectFit="contain" className="rounded-lg p-2" />
+                            <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 z-10" onClick={removeImage}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </>
+                    ) : (
+                        <div className="text-center">
+                            <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
+                            <p className="mt-2 text-sm text-muted-foreground">Click or drag file to this area to upload</p>
+                            <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                    )}
+                    <Input id="image" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} accept="image/*"/>
+                </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
@@ -164,3 +194,4 @@ export default function NewProductPage() {
     </div>
   );
 }
+

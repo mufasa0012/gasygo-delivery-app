@@ -52,7 +52,7 @@ export default function NewOrderPage() {
     };
 
     const handleSelectChange = (id: string, value: string) => {
-        setFormData(prev => ({...prev, [id]: value}));
+        setFormData(prev => ({...prev, [id]: value === 'unassigned' ? '' : value }));
         if (id === 'productId') {
             const product = products.find(p => p.id === value) || null;
             setSelectedProduct(product);
@@ -186,12 +186,12 @@ export default function NewOrderPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="driverId">Assign Driver</Label>
-                    <Select onValueChange={(value) => handleSelectChange('driverId', value)} value={formData.driverId}>
+                    <Select onValueChange={(value) => handleSelectChange('driverId', value)} value={formData.driverId || 'unassigned'}>
                         <SelectTrigger id="driverId">
                             <SelectValue placeholder="Select a driver" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Unassigned</SelectItem>
+                             <SelectItem value="unassigned">Unassigned</SelectItem>
                             {drivers.map(driver => (
                                 <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
                             ))}

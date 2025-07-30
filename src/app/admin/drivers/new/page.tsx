@@ -16,10 +16,15 @@ export default function NewDriverPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false);
   const [driverData, setDriverData] = React.useState({
     name: '',
     phone: '',
   });
+  
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -74,6 +79,7 @@ export default function NewDriverPage() {
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="max-w-2xl mx-auto w-full">
         <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">Add New Driver</h1>
+        {isClient ? (
         <Card>
           <CardHeader>
             <CardTitle>Driver Information</CardTitle>
@@ -93,6 +99,7 @@ export default function NewDriverPage() {
             </Button>
           </CardContent>
         </Card>
+        ) : null}
       </div>
     </div>
   );

@@ -23,10 +23,6 @@ export default function NewDriverPage() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input id="phone" type="tel" placeholder="e.g., +254712345678" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="license">Driver's License Number</Label>
-              <Input id="license" placeholder="e.g., DL123456" />
-            </div>
             <Button className="w-full">Add Driver</Button>
           </CardContent>
         </Card>

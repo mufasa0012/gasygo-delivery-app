@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCart } from '@/context/CartContext';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { CartItem } from '@/components/CartItem';
-import { ShoppingCart, Package } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 export function CartContent() {
@@ -17,6 +18,9 @@ export function CartContent() {
         <ShoppingCart className="h-16 w-16 text-muted-foreground" />
         <h3 className="mt-4 text-xl font-semibold">Your cart is empty</h3>
         <p className="mt-2 text-muted-foreground">Add some products to get started.</p>
+         <Button asChild className="mt-6">
+            <Link href="/products">Browse Products</Link>
+        </Button>
       </div>
     );
   }
@@ -36,8 +40,8 @@ export function CartContent() {
           <span>Subtotal</span>
           <span>Ksh{totalPrice.toFixed(2)}</span>
         </div>
-        <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-          Proceed to Checkout
+        <Button asChild size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+            <Link href="/checkout">Proceed to Checkout</Link>
         </Button>
       </div>
     </div>

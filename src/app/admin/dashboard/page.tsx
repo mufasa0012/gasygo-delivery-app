@@ -11,10 +11,23 @@ import { MoreHorizontal, Users, Package, CircleDollarSign, Truck, Bot, Lightbulb
 import Link from 'next/link';
 import { getAdviceAction } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Order } from '@/lib/orders';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
 
 const initialAdviceState = {
   advice: 'Click a button to get your first tip!',
 };
+
+interface Driver {
+    id: string;
+    name: string;
+    phone: string;
+    status: 'Available' | 'On Delivery' | 'Offline';
+}
 
 function AIBusinessCoach() {
   const [state, formAction, isPending] = React.useActionState(getAdviceAction, initialAdviceState);
@@ -73,6 +86,59 @@ function AIBusinessCoach() {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(true);
+  const [stats, setStats] = React.useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    pendingDeliveries: 0,
+    availableDrivers: 0,
+  });
+  const [recentOrders, setRecentOrders] = React.useState<Order[]>([]);
+
+  React.useEffect(() => {
+    const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const driversQuery = query(collection(db, 'drivers'));
+
+    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+      
+      const totalRevenue = ordersData
+        .filter(order => order.status === 'Delivered')
+        .reduce((sum, order) => sum + order.totalPrice, 0);
+      
+      const totalOrders = ordersData.length;
+      
+      const pendingDeliveries = ordersData.filter(order => order.status === 'Pending').length;
+      
+      setStats(prev => ({ ...prev, totalRevenue, totalOrders, pendingDeliveries }));
+      setRecentOrders(ordersData.slice(0, 5));
+      setLoading(false); // Set loading to false after first data fetch
+    });
+
+    const unsubDrivers = onSnapshot(driversQuery, (snapshot) => {
+      const driversData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Driver));
+      const availableDrivers = driversData.filter(driver => driver.status === 'Available').length;
+      setStats(prev => ({ ...prev, availableDrivers }));
+    });
+
+    return () => {
+      unsubOrders();
+      unsubDrivers();
+    };
+  }, []);
+
+  const getStatusBadgeClass = (status: Order['status']) => {
+        switch (status) {
+            case 'Pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'Out for Delivery': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+            case 'Delivered': return 'bg-green-500/20 text-green-700 border-green-500/30';
+            case 'Cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
+            default: return 'bg-muted text-muted-foreground';
+        }
+    };
+
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex items-center justify-between">
@@ -91,7 +157,7 @@ export default function AdminDashboard() {
             <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Ksh 0</div>
+            {loading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">Ksh {stats.totalRevenue.toFixed(2)}</div> }
             <p className="text-xs text-muted-foreground">From delivered orders</p>
           </CardContent>
         </Card>
@@ -101,7 +167,7 @@ export default function AdminDashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+             {loading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{stats.totalOrders}</div>}
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
@@ -111,7 +177,7 @@ export default function AdminDashboard() {
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            {loading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{stats.pendingDeliveries}</div>}
             <p className="text-xs text-muted-foreground">Ready for assignment</p>
           </CardContent>
         </Card>
@@ -121,7 +187,7 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            {loading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{stats.availableDrivers}</div>}
             <p className="text-xs text-muted-foreground">Ready for deliveries</p>
           </CardContent>
         </Card>
@@ -139,18 +205,58 @@ export default function AdminDashboard() {
                   <TableHead>Customer</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Driver</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    No recent orders.
-                  </TableCell>
-                </TableRow>
+                {loading ? (
+                    Array.from({length: 5}).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-24"/></TableCell>
+                            <TableCell><Skeleton className="h-6 w-20 rounded-full"/></TableCell>
+                            <TableCell><Skeleton className="h-5 w-20"/></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-5 w-16"/></TableCell>
+                            <TableCell><Skeleton className="h-8 w-8"/></TableCell>
+                        </TableRow>
+                    ))
+                ) : recentOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No recent orders.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                    recentOrders.map(order => (
+                         <TableRow key={order.id} className="cursor-pointer" onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                            <TableCell className="font-medium">{order.customerName}</TableCell>
+                            <TableCell>
+                                <Badge variant="outline" className={cn("capitalize", getStatusBadgeClass(order.status))}>
+                                    {order.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{order.driverName || 'Unassigned'}</TableCell>
+                            <TableCell className="text-right">Ksh{order.totalPrice.toFixed(2)}</TableCell>
+                            <TableCell>
+                               <DropdownMenu>
+                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">Toggle menu</span>
+                                    </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/admin/orders/${order.id}`}>View Details</Link>
+                                    </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

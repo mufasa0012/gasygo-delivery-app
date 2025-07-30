@@ -9,10 +9,21 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 
 interface Driver {
     id: string;
@@ -24,6 +35,9 @@ interface Driver {
 export default function DriversPage() {
     const [drivers, setDrivers] = React.useState<Driver[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const [selectedDriver, setSelectedDriver] = React.useState<Driver | null>(null);
+    const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+    const { toast } = useToast();
 
     React.useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'drivers'), (snapshot) => {
@@ -33,6 +47,28 @@ export default function DriversPage() {
         });
         return () => unsubscribe();
     }, []);
+
+    const handleDelete = async () => {
+        if (selectedDriver) {
+          try {
+            await deleteDoc(doc(db, 'drivers', selectedDriver.id));
+            toast({
+              title: 'Driver Deleted',
+              description: `${selectedDriver.name} has been removed.`,
+            });
+          } catch (error) {
+             toast({
+              title: 'Error',
+              description: 'Could not delete driver. Please try again.',
+              variant: 'destructive'
+            });
+          } finally {
+            setShowDeleteDialog(false);
+            setSelectedDriver(null);
+          }
+        }
+      };
+
 
     const getStatusBadgeClass = (status: Driver['status']) => {
         switch (status) {
@@ -117,8 +153,16 @@ export default function DriversPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={`/admin/drivers/edit/${driver.id}`}>Edit</Link></DropdownMenuItem>
+                                <DropdownMenuItem 
+                                    className="text-destructive"
+                                    onClick={() => {
+                                        setSelectedDriver(driver);
+                                        setShowDeleteDialog(true);
+                                    }}
+                                >
+                                    Delete
+                                </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -129,6 +173,22 @@ export default function DriversPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the driver
+                &quot;{selectedDriver?.name}&quot; and remove their data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setSelectedDriver(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+       </AlertDialog>
     </div>
   );
 }

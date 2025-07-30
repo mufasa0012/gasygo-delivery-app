@@ -32,7 +32,7 @@ export default function NewDriverPage() {
   };
 
   const handleAddDriver = async () => {
-    if (!driverData.name || !driverData.phone) {
+    if (!driverData.name.trim() || !driverData.phone.trim()) {
       toast({
         title: 'Missing Fields',
         description: 'Please fill out all required fields.',

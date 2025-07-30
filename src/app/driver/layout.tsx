@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DriverLayout({
   children,
@@ -18,6 +18,28 @@ export default function DriverLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [driverName, setDriverName] = React.useState('');
+
+  React.useEffect(() => {
+    // Ensure this runs only on the client
+    const name = localStorage.getItem('driverName') || '';
+    setDriverName(name);
+  }, []);
+  
+  const handleLogout = () => {
+    localStorage.removeItem('driverId');
+    localStorage.removeItem('driverName');
+    router.push('/login');
+  }
+
+  const getInitials = (name: string) => {
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
 
   return (
       <div className="flex min-h-screen w-full flex-col">
@@ -38,14 +60,11 @@ export default function DriverLayout({
             </Link>
           </nav>
            <div className="flex items-center gap-4 md:ml-auto">
-              <Button asChild variant="outline">
-                <Link href="/login">
+              <Button onClick={handleLogout} variant="outline">
                   <LogOut className="mr-2 h-4 w-4" /> Log Out
-                </Link>
               </Button>
             <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                <AvatarFallback>DR</AvatarFallback>
+                <AvatarFallback>{driverName ? getInitials(driverName) : 'DR'}</AvatarFallback>
             </Avatar>
            </div>
         </header>

@@ -51,7 +51,11 @@ export default function DriverLoginPage() {
           variant: 'destructive',
         });
       } else {
-        // In a real app, you would set up a session here
+        const driverDoc = querySnapshot.docs[0];
+        // In a real app, you would set up a more secure session
+        localStorage.setItem('driverId', driverDoc.id);
+        localStorage.setItem('driverName', driverDoc.data().name);
+        
         toast({
           title: 'Login Successful!',
           description: 'Redirecting to your deliveries...',

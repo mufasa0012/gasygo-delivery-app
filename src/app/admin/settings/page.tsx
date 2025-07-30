@@ -11,17 +11,28 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import * as React from 'react';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import ImageKit from 'imagekit-javascript';
+
+const imageKit = new ImageKit({
+    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+});
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
   const [settings, setSettings] = React.useState({
     businessName: 'GasyGo',
     contactEmail: 'mosesissa810@gmail.com',
     contactPhone: '+254704095021',
     emailNotifications: true,
     smsNotifications: false,
+    businessLogoUrl: '',
   });
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
 
   React.useEffect(() => {
     const fetchSettings = async () => {
@@ -30,7 +41,7 @@ export default function SettingsPage() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            setSettings(docSnap.data() as any);
+            setSettings(prev => ({...prev, ...docSnap.data()}));
         }
         setLoading(false);
     };
@@ -43,15 +54,45 @@ export default function SettingsPage() {
     setSettings(prev => ({ ...prev, [id]: value }));
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setLogoFile(e.target.files[0]);
+    }
+  };
+
   const handleSwitchChange = (id: string, checked: boolean) => {
     setSettings(prev => ({ ...prev, [id]: checked }));
   }
 
   const handleSaveChanges = async () => {
-    setLoading(true);
+    setSaving(true);
     try {
+      let updatedSettings = { ...settings };
+
+      if (logoFile) {
+        // 1. Get ImageKit authentication
+        const authResponse = await fetch('/api/imagekit-auth');
+        if (!authResponse.ok) {
+            throw new Error('Failed to get ImageKit auth credentials');
+        }
+        const authData = await authResponse.json();
+
+        // 2. Upload image to ImageKit
+        const uploadResult = await imageKit.upload({
+            file: logoFile,
+            fileName: logoFile.name,
+            token: authData.token,
+            expire: authData.expire,
+            signature: authData.signature,
+        });
+        updatedSettings.businessLogoUrl = uploadResult.url;
+      }
+
       // Using 'businessInfo' as the document ID to store all settings in one document
-      await setDoc(doc(db, 'settings', 'businessInfo'), settings, { merge: true });
+      await setDoc(doc(db, 'settings', 'businessInfo'), updatedSettings, { merge: true });
+      setSettings(updatedSettings);
+      setLogoFile(null);
+
       toast({
         title: "Settings Saved!",
         description: "Your changes have been successfully saved.",
@@ -64,7 +105,7 @@ export default function SettingsPage() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -89,21 +130,31 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="business-name">Business Name</Label>
+                <Label htmlFor="businessName">Business Name</Label>
                 <Input id="businessName" value={settings.businessName} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact-email">Contact Email</Label>
+                <Label htmlFor="contactEmail">Contact Email</Label>
                 <Input id="contactEmail" type="email" value={settings.contactEmail} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact-phone">Contact Phone</Label>
+                <Label htmlFor="contactPhone">Contact Phone</Label>
                 <Input id="contactPhone" type="tel" value={settings.contactPhone} onChange={handleInputChange} />
+              </div>
+              {settings.businessLogoUrl && (
+                <div className="space-y-2">
+                  <Label>Current Logo</Label>
+                  <Image src={settings.businessLogoUrl} alt="Business Logo" width={100} height={100} className="rounded-md border p-2" />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="logo">Business Logo</Label>
+                <Input id="logo" type="file" onChange={handleImageChange} />
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleSaveChanges} disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Save Changes'}
+              <Button onClick={handleSaveChanges} disabled={saving}>
+                {saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}
               </Button>
             </CardFooter>
           </Card>
@@ -116,22 +167,22 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
+                  <Label htmlFor="emailNotifications" className="text-base">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">Receive an email for new orders and system alerts.</p>
                 </div>
                 <Switch 
-                  id="email-notifications" 
+                  id="emailNotifications" 
                   checked={settings.emailNotifications} 
                   onCheckedChange={(checked) => handleSwitchChange('emailNotifications', checked)} 
                 />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <Label htmlFor="sms-notifications" className="text-base">SMS Notifications</Label>
+                  <Label htmlFor="smsNotifications" className="text-base">SMS Notifications</Label>
                    <p className="text-sm text-muted-foreground">Get text message alerts for urgent matters.</p>
                 </div>
                 <Switch 
-                  id="sms-notifications" 
+                  id="smsNotifications" 
                   checked={settings.smsNotifications} 
                   onCheckedChange={(checked) => handleSwitchChange('smsNotifications', checked)}
                   disabled 
@@ -139,8 +190,8 @@ export default function SettingsPage() {
               </div>
             </CardContent>
              <CardFooter>
-              <Button onClick={handleSaveChanges} disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : 'Save Notification Settings'}
+              <Button onClick={handleSaveChanges} disabled={saving}>
+                {saving ? <Loader2 className="animate-spin" /> : 'Save Notification Settings'}
               </Button>
             </CardFooter>
           </Card>

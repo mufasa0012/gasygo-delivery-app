@@ -40,7 +40,7 @@ export function Footer() {
             <ul className="mt-4 space-y-2">
               <li>
                 <Button variant="link" asChild className="p-0 text-muted-foreground h-auto hover:text-primary">
-                  <Link href="/ai-order">Order Now</Link>
+                  <Link href="/products">Order Now</Link>
                 </Button>
               </li>
               <li>

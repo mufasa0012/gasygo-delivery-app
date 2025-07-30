@@ -24,7 +24,7 @@ export function Header() {
   const navLinks = [
       { href: '/', label: 'Home' },
       { href: '/products', label: 'Products' },
-      { href: '/ai-order', label: 'Order Now' },
+      { href: '/products', label: 'Order Now' },
       { href: '/contact', label: 'Contact Us' },
   ];
 
@@ -62,7 +62,6 @@ export function Header() {
             </SheetTrigger>
             <SheetContent className="w-[400px] sm:w-[540px]">
               <SheetHeader>
-                <SheetTitle>Your Shopping Cart</SheetTitle>
                  <VisuallyHidden>
                     <SheetTitle>Shopping Cart</SheetTitle>
                 </VisuallyHidden>

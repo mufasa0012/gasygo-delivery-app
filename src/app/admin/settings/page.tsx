@@ -2,7 +2,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import * as React from 'react';
 import { db } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Music4 } from 'lucide-react';
 import Image from 'next/image';
 import ImageKit from 'imagekit-javascript';
 
@@ -33,9 +33,11 @@ export default function SettingsPage() {
     businessLogoUrl: '',
     heroImageUrl: '',
     primaryColor: '221 83% 53%', // Default primary color HSL
+    newOrderRingtoneUrl: '',
   });
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [heroImageFile, setHeroImageFile] = React.useState<File | null>(null);
+  const [ringtoneFile, setRingtoneFile] = React.useState<File | null>(null);
 
   React.useEffect(() => {
     const fetchSettings = async () => {
@@ -64,6 +66,8 @@ export default function SettingsPage() {
         setLogoFile(files[0]);
        } else if (id === 'heroImage') {
         setHeroImageFile(files[0]);
+       } else if (id === 'ringtone') {
+        setRingtoneFile(files[0]);
        }
     }
   };
@@ -77,7 +81,7 @@ export default function SettingsPage() {
     try {
       let updatedSettings = { ...settings };
 
-      const uploadImage = async (file: File) => {
+      const uploadFile = async (file: File) => {
         const authResponse = await fetch('/api/imagekit-auth');
         if (!authResponse.ok) {
             throw new Error('Failed to get ImageKit auth credentials');
@@ -95,19 +99,21 @@ export default function SettingsPage() {
       }
 
       if (logoFile) {
-        updatedSettings.businessLogoUrl = await uploadImage(logoFile);
+        updatedSettings.businessLogoUrl = await uploadFile(logoFile);
       }
       if (heroImageFile) {
-        updatedSettings.heroImageUrl = await uploadImage(heroImageFile);
+        updatedSettings.heroImageUrl = await uploadFile(heroImageFile);
+      }
+      if (ringtoneFile) {
+        updatedSettings.newOrderRingtoneUrl = await uploadFile(ringtoneFile);
       }
 
-      // Using 'businessInfo' as the document ID to store all settings in one document
       await setDoc(doc(db, 'settings', 'businessInfo'), updatedSettings, { merge: true });
       setSettings(updatedSettings);
       setLogoFile(null);
       setHeroImageFile(null);
+      setRingtoneFile(null);
       
-      // Also update the CSS variable for immediate feedback
       if (updatedSettings.primaryColor) {
         document.documentElement.style.setProperty('--primary-hsl', updatedSettings.primaryColor);
       }
@@ -169,7 +175,7 @@ export default function SettingsPage() {
               )}
               <div className="space-y-2">
                 <Label htmlFor="logo">Business Logo</Label>
-                <Input id="logo" type="file" onChange={handleImageChange} />
+                <Input id="logo" type="file" onChange={handleImageChange} accept="image/*" />
               </div>
             </CardContent>
             <CardFooter>
@@ -205,7 +211,7 @@ export default function SettingsPage() {
               )}
                <div className="space-y-2">
                 <Label htmlFor="heroImage">Homepage Hero Image</Label>
-                <Input id="heroImage" type="file" onChange={handleImageChange} />
+                <Input id="heroImage" type="file" onChange={handleImageChange} accept="image/*"/>
               </div>
             </CardContent>
              <CardFooter>
@@ -245,6 +251,18 @@ export default function SettingsPage() {
                   disabled 
                 />
               </div>
+               <div className="space-y-2 pt-4">
+                  <Label htmlFor="ringtone">New Order Ringtone</Label>
+                  {settings.newOrderRingtoneUrl && !ringtoneFile && (
+                    <div className="flex items-center gap-4">
+                        <Music4 className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Current tone set.</span>
+                        <audio src={settings.newOrderRingtoneUrl} controls className="h-8" />
+                    </div>
+                  )}
+                  <Input id="ringtone" type="file" onChange={handleImageChange} accept="audio/*"/>
+                  <p className="text-sm text-muted-foreground">Upload an audio file (MP3, WAV) to play for new orders.</p>
+                </div>
             </CardContent>
              <CardFooter>
               <Button onClick={handleSaveChanges} disabled={saving}>

@@ -8,27 +8,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { Order } from '@/lib/orders';
 
-interface Order {
-    id: string;
-    customerName: string;
-    createdAt: {
-        toDate: () => Date;
-    };
-    status: 'Pending' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
-    totalPrice: number;
-}
 
 
 export default function OrdersPage() {
     const [orders, setOrders] = React.useState<Order[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const router = useRouter();
 
     React.useEffect(() => {
         const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
@@ -108,7 +102,7 @@ export default function OrdersPage() {
                 </TableRow>
               ) : (
                 orders.map(order => (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className="cursor-pointer" onClick={() => router.push(`/admin/orders/${order.id}`)}>
                         <TableCell className="font-medium">{order.customerName}</TableCell>
                         <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}</TableCell>
                         <TableCell>
@@ -119,15 +113,19 @@ export default function OrdersPage() {
                         <TableCell className="text-right">Ksh{order.totalPrice.toFixed(2)}</TableCell>
                          <TableCell>
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                 <Button aria-haspopup="true" size="icon" variant="ghost">
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Toggle menu</span>
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                <DropdownMenuItem>Assign Driver</DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/admin/orders/${order.id}`}>View Details</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/admin/orders/${order.id}?action=assign`}>Assign Driver</Link>
+                                </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>

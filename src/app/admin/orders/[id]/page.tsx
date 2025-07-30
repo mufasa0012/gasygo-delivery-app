@@ -14,8 +14,9 @@ import { Order } from '@/lib/orders';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
+import Link from 'next/link';
 
 
 interface Driver {
@@ -24,7 +25,7 @@ interface Driver {
     status: 'Available' | 'On Delivery' | 'Offline';
 }
 
-function OrderDetailsPage({ google }: { google: any }) {
+function OrderDetailsPage() {
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
@@ -38,12 +39,6 @@ function OrderDetailsPage({ google }: { google: any }) {
   const [selectedDriver, setSelectedDriver] = React.useState('');
   const [selectedStatus, setSelectedStatus] = React.useState('');
 
-  const mapStyles = {
-    width: '100%',
-    height: '250px',
-    borderRadius: '0.5rem',
-  };
-
   const getLatLng = () => {
     if (!order?.deliveryAddress) return null;
     const match = order.deliveryAddress.match(/Lat: ([-]?\d+[.]?\d*), Lon: ([-]?\d+[.]?\d*)/);
@@ -53,6 +48,19 @@ function OrderDetailsPage({ google }: { google: any }) {
     return null;
   }
   const latLng = getLatLng();
+
+  const getStaticMapUrl = () => {
+    if (!latLng) return null;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return null;
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${latLng.lat},${latLng.lng}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${latLng.lat},${latLng.lng}&key=${apiKey}`;
+  }
+
+  const getGoogleMapsLink = () => {
+    if (!latLng) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order?.deliveryAddress || '')}`;
+    return `https://www.google.com/maps/search/?api=1&query=${latLng.lat},${latLng.lng}`;
+  }
+
 
   React.useEffect(() => {
     if (!id) return;
@@ -128,6 +136,8 @@ function OrderDetailsPage({ google }: { google: any }) {
     return null; // Or some other not found component
   }
 
+  const staticMapUrl = getStaticMapUrl();
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
        <div className="flex items-center gap-4">
@@ -151,19 +161,18 @@ function OrderDetailsPage({ google }: { google: any }) {
                  <CardContent className="space-y-4">
                     <div className="flex items-center gap-4"><Phone className="w-4 h-4 text-muted-foreground"/> <span>{order.customerName} - {order.customerPhone}</span></div>
                     <div className="flex items-start gap-4"><MapPin className="w-4 h-4 text-muted-foreground mt-1"/> <p>{order.deliveryAddress}</p></div>
-                    {latLng && google && (
-                       <div className="relative h-64">
-                         <Map
-                           google={google}
-                           zoom={15}
-                           style={mapStyles}
-                           initialCenter={latLng}
-                           center={latLng}
-                           containerStyle={mapStyles}
-                         >
-                            <Marker position={latLng} />
-                         </Map>
-                       </div>
+                    {staticMapUrl ? (
+                       <Link href={getGoogleMapsLink()} target="_blank" rel="noopener noreferrer">
+                          <Image 
+                            src={staticMapUrl} 
+                            alt={`Map of ${order.deliveryAddress}`}
+                            width={600}
+                            height={300}
+                            className="rounded-md border object-cover"
+                          />
+                       </Link>
+                    ) : (
+                       <p className="text-sm text-muted-foreground">Map preview not available for this address.</p>
                     )}
                  </CardContent>
             </Card>
@@ -243,21 +252,10 @@ function OrderDetailsPage({ google }: { google: any }) {
   );
 }
 
-const OrderDetailsPageWrapper = GoogleApiWrapper({
-    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    LoadingContainer: () => (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    ),
-  })(OrderDetailsPage);
-  
 export default function Page() {
     return (
         <React.Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageWrapper />
+            <OrderDetailsPage />
         </React.Suspense>
     )
 }
-
-    

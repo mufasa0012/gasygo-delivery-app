@@ -102,7 +102,7 @@ export default function ProductsPage() {
                 </TableRow>
               ) : (
                 products.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.fbId}>
                     <TableCell className="hidden sm:table-cell">
                         <Image
                         alt={product.name}

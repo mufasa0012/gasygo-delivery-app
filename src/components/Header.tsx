@@ -15,6 +15,7 @@ import {
 import { CartContent } from './CartContent';
 import { Badge } from './ui/badge';
 import React from 'react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 export function Header() {
   const { totalItems } = useCart();
@@ -62,6 +63,9 @@ export function Header() {
             <SheetContent className="w-[400px] sm:w-[540px]">
               <SheetHeader>
                 <SheetTitle>Your Shopping Cart</SheetTitle>
+                 <VisuallyHidden>
+                    <SheetTitle>Shopping Cart</SheetTitle>
+                </VisuallyHidden>
               </SheetHeader>
               <CartContent />
             </SheetContent>

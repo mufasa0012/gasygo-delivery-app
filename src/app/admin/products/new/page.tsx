@@ -10,9 +10,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import ImageKit from 'imagekit-javascript';
+
+const imageKit = new ImageKit({
+    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+});
 
 export default function NewProductPage() {
   const { toast } = useToast();
@@ -52,12 +57,25 @@ export default function NewProductPage() {
     setLoading(true);
 
     try {
-      // 1. Upload image to Firebase Storage
-      const imageRef = ref(storage, `products/${Date.now()}_${productData.image.name}`);
-      const snapshot = await uploadBytes(imageRef, productData.image);
-      const imageUrl = await getDownloadURL(snapshot.ref);
+      // 1. Get ImageKit authentication
+      const authResponse = await fetch('/api/imagekit-auth');
+      if (!authResponse.ok) {
+          throw new Error('Failed to get ImageKit auth credentials');
+      }
+      const authData = await authResponse.json();
 
-      // 2. Save product data to Firestore
+      // 2. Upload image to ImageKit
+      const uploadResult = await imageKit.upload({
+          file: productData.image,
+          fileName: productData.image.name,
+          token: authData.token,
+          expire: authData.expire,
+          signature: authData.signature,
+      });
+      const imageUrl = uploadResult.url;
+
+
+      // 3. Save product data to Firestore
       await addDoc(collection(db, 'products'), {
         name: productData.name,
         description: productData.description,
@@ -65,6 +83,7 @@ export default function NewProductPage() {
         category: productData.category,
         image: imageUrl,
         hint: 'product image', // Or generate a hint based on name/category
+        createdAt: new Date(),
       });
 
       toast({

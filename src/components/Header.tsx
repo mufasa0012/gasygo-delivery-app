@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Flame, ArrowRight, ShoppingCart, Menu, X } from 'lucide-react';
+import { Flame, ArrowRight, ShoppingCart, Menu, X, LocateIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import {
@@ -24,6 +24,7 @@ export function Header() {
   const navLinks = [
       { href: '/', label: 'Home' },
       { href: '/products', label: 'Products' },
+      { href: '/track-order', label: 'Track Order'},
       { href: '/contact', label: 'Contact Us' },
   ];
 

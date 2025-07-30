@@ -125,13 +125,13 @@ export default function NewProductPage() {
             <CardDescription>Fill in the information for the new product.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+             <div className="space-y-2">
+                <Label htmlFor="image">Product Image</Label>
+                <Input id="image" type="file" onChange={handleImageChange} />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
               <Input id="name" placeholder="e.g., 12kg Propane Cylinder" value={productData.name} onChange={handleInputChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="A short description of the product." value={productData.description} onChange={handleInputChange}/>
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -151,9 +151,9 @@ export default function NewProductPage() {
                     </Select>
                 </div>
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="image">Product Image</Label>
-                <Input id="image" type="file" onChange={handleImageChange} />
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" placeholder="A short description of the product." value={productData.description} onChange={handleInputChange}/>
             </div>
             <Button className="w-full" onClick={handleAddProduct} disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : 'Add Product'}

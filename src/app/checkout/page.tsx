@@ -9,24 +9,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/context/CartContext';
-import { Loader2, ShoppingCart } from 'lucide-react';
+import { Loader2, ShoppingCart, LocateFixed } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function CheckoutPage() {
     const { cartItems, totalPrice, totalItems, clearCart } = useCart();
     const [loading, setLoading] = React.useState(false);
     const { toast } = useToast();
     const router = useRouter();
+    const [addressMode, setAddressMode] = React.useState('manual');
+    const [locationLoading, setLocationLoading] = React.useState(false);
 
     const [formData, setFormData] = React.useState({
         customerName: '',
         customerPhone: '',
         deliveryAddress: '',
+        apartment: '',
+        landmark: '',
         notes: ''
     });
 
@@ -35,11 +40,48 @@ export default function CheckoutPage() {
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
+    const handleShareLocation = () => {
+        if (!navigator.geolocation) {
+            toast({
+                title: 'Geolocation not supported',
+                description: "Your browser doesn't support location sharing.",
+                variant: 'destructive',
+            });
+            return;
+        }
+        setLocationLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setFormData(prev => ({ ...prev, deliveryAddress: `Lat: ${latitude}, Lon: ${longitude}` }));
+                setLocationLoading(false);
+                toast({
+                    title: 'Location Captured!',
+                    description: 'Your location has been set as the delivery address.',
+                });
+            },
+            (error) => {
+                setLocationLoading(false);
+                toast({
+                    title: 'Could not get location',
+                    description: 'Please ensure location services are enabled for your browser.',
+                    variant: 'destructive',
+                });
+                console.error("Geolocation error:", error);
+            }
+        );
+    };
+
     const handlePlaceOrder = async () => {
-        if (!formData.customerName || !formData.customerPhone || !formData.deliveryAddress) {
+         const isManualAddress = addressMode === 'manual';
+        const finalAddress = isManualAddress 
+            ? `${formData.deliveryAddress}, ${formData.apartment}, Landmark: ${formData.landmark}`
+            : formData.deliveryAddress;
+            
+        if (!formData.customerName || !formData.customerPhone || !finalAddress.trim()) {
             toast({
                 title: 'Missing Fields',
-                description: 'Please fill in your name, phone, and address.',
+                description: 'Please fill in your name, phone, and address details.',
                 variant: 'destructive',
             });
             return;
@@ -57,7 +99,10 @@ export default function CheckoutPage() {
 
         try {
             await addDoc(collection(db, 'orders'), {
-                ...formData,
+                customerName: formData.customerName,
+                customerPhone: formData.customerPhone,
+                deliveryAddress: finalAddress,
+                notes: formData.notes,
                 items: cartItems.map(item => ({ 
                     productId: item.product.id,
                     name: item.product.name,
@@ -119,7 +164,7 @@ export default function CheckoutPage() {
                         <div>
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Delivery Information</CardTitle>
+                                    <CardTitle>Contact & Delivery</CardTitle>
                                     <CardDescription>Where should we send your order?</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -131,10 +176,54 @@ export default function CheckoutPage() {
                                         <Label htmlFor="customerPhone">Phone Number</Label>
                                         <Input id="customerPhone" type="tel" value={formData.customerPhone} onChange={handleInputChange} />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="deliveryAddress">Delivery Address</Label>
-                                        <Textarea id="deliveryAddress" value={formData.deliveryAddress} onChange={handleInputChange} />
+                                    
+                                     <div className="space-y-2">
+                                        <Label>Delivery Method</Label>
+                                         <RadioGroup value={addressMode} onValueChange={setAddressMode} className="flex gap-4">
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="manual" id="manual" />
+                                                <Label htmlFor="manual">Enter Address Manually</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="location" id="location" />
+                                                <Label htmlFor="location">Share Location</Label>
+                                            </div>
+                                        </RadioGroup>
                                     </div>
+
+                                    {addressMode === 'manual' ? (
+                                        <div className="space-y-4 pt-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="deliveryAddress">Street Address</Label>
+                                                <Input id="deliveryAddress" placeholder="e.g., 123 Ngong Road" value={formData.deliveryAddress} onChange={handleInputChange} />
+                                            </div>
+                                             <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="apartment">Apartment / House No.</Label>
+                                                    <Input id="apartment" placeholder="e.g., Apt 4B" value={formData.apartment} onChange={handleInputChange} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="landmark">Landmark</Label>
+                                                    <Input id="landmark" placeholder="e.g., Near Prestige Plaza" value={formData.landmark} onChange={handleInputChange} />
+                                                </div>
+                                             </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4 pt-2">
+                                            <Button onClick={handleShareLocation} disabled={locationLoading} className="w-full">
+                                                {locationLoading ? (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <LocateFixed className="mr-2 h-4 w-4" />
+                                                )}
+                                                Share My Location
+                                            </Button>
+                                            {formData.deliveryAddress.startsWith('Lat:') && (
+                                                <p className="text-sm text-green-600 bg-green-500/10 p-2 rounded-md">{formData.deliveryAddress}</p>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="space-y-2">
                                         <Label htmlFor="notes">Order Notes (Optional)</Label>
                                         <Textarea id="notes" placeholder="Any special instructions..." value={formData.notes} onChange={handleInputChange} />

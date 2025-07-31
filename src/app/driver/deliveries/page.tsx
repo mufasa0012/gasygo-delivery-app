@@ -4,10 +4,9 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Phone, ArrowRight, Loader2, CircleCheck } from 'lucide-react';
-import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
+import { MapPin, Phone, ArrowRight, Loader2, CircleCheck, Navigation, Check } from 'lucide-react';
+import { collection, onSnapshot, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Order } from '@/lib/orders';
 import { useRouter } from 'next/navigation';
@@ -22,6 +21,9 @@ export default function DriverDeliveriesPage() {
     const [driverId, setDriverId] = React.useState<string | null>(null);
     const router = useRouter();
     const { toast } = useToast();
+    const locationIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+    const [updatingOrderId, setUpdatingOrderId] = React.useState<string | null>(null);
+
 
     React.useEffect(() => {
         const id = localStorage.getItem('driverId');
@@ -37,6 +39,13 @@ export default function DriverDeliveriesPage() {
         }
     }, [router, toast]);
 
+    const stopLocationUpdates = React.useCallback(() => {
+        if (locationIntervalRef.current) {
+            clearInterval(locationIntervalRef.current);
+            locationIntervalRef.current = null;
+        }
+    },[]);
+
     React.useEffect(() => {
         if (!driverId) return;
 
@@ -45,8 +54,16 @@ export default function DriverDeliveriesPage() {
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-            setOrders(ordersData.sort((a,b) => (a.status === 'Out for Delivery' ? -1 : 1))); // Show active delivery first
+            const activeDelivery = ordersData.find(o => o.status === 'Out for Delivery');
+
+            setOrders(ordersData.sort((a,b) => (a.status === 'Out for Delivery' ? -1 : 1)));
             setLoading(false);
+
+            stopLocationUpdates();
+            if (activeDelivery) {
+                startLocationUpdates(activeDelivery.id);
+            }
+
         }, (error) => {
             console.error("Error fetching orders:", error);
             toast({
@@ -57,34 +74,84 @@ export default function DriverDeliveriesPage() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribe();
+            stopLocationUpdates();
+        }
 
-    }, [driverId, toast]);
+    }, [driverId, toast, stopLocationUpdates]);
 
-    const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
+    const startLocationUpdates = (orderId: string) => {
+        locationIntervalRef.current = setInterval(() => {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const orderRef = doc(db, 'orders', orderId);
+                    await updateDoc(orderRef, {
+                        driverLocation: {
+                            lat: latitude,
+                            lng: longitude
+                        }
+                    });
+                },
+                (error) => {
+                    console.error("Geolocation error for tracking:", error);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }, 15000); // Update every 15 seconds
+    };
+
+    const handleStartDelivery = async (orderId: string) => {
+        setUpdatingOrderId(orderId);
+        try {
+            const batch = writeBatch(db);
+            const activeOrders = orders.filter(o => o.status === 'Out for Delivery' && o.id !== orderId);
+            
+            // Ensure no other deliveries are active for this driver
+            for(const activeOrder of activeOrders) {
+                batch.update(doc(db, 'orders', activeOrder.id), { status: 'Pending', driverLocation: null });
+            }
+
+            batch.update(doc(db, 'orders', orderId), { status: 'Out for Delivery' });
+            await batch.commit();
+
+            toast({
+                title: 'Delivery Started',
+                description: 'You are now on your way. Your location is being shared with the customer.'
+            });
+        } catch (error) {
+             console.error("Error starting delivery: ", error);
+             toast({ title: 'Error', description: 'Could not start delivery.', variant: 'destructive' });
+        } finally {
+            setUpdatingOrderId(null);
+        }
+    };
+
+    const handleFinishDelivery = async (orderId: string) => {
+        setUpdatingOrderId(orderId);
+        stopLocationUpdates();
         try {
             const orderRef = doc(db, 'orders', orderId);
-            await updateDoc(orderRef, { status: newStatus });
+            await updateDoc(orderRef, { 
+                status: 'Delivered',
+                driverLocation: null,
+            });
             toast({
-                title: 'Order Updated',
-                description: `Order has been marked as ${newStatus}.`
+                title: 'Delivery Complete!',
+                description: `Order has been marked as delivered.`
             });
         } catch (error) {
             console.error("Error updating status: ", error);
-             toast({
-                title: 'Error',
-                description: 'Could not update order status.',
-                variant: 'destructive'
-            });
+             toast({ title: 'Error', description: 'Could not update order status.', variant: 'destructive' });
+        } finally {
+            setUpdatingOrderId(null);
         }
     }
     
-    const getGoogleMapsLink = (address: string) => {
-        const match = address.match(/Lat: ([-]?\d+[.]?\d*), Lon: ([-]?\d+[.]?\d*)/);
-        if (match) {
-            const lat = parseFloat(match[1]);
-            const lng = parseFloat(match[2]);
-            return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    const getGoogleMapsLink = (address: string, location: Order['deliveryLocation']) => {
+        if (location) {
+            return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
         }
         return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     }
@@ -165,24 +232,28 @@ export default function DriverDeliveriesPage() {
                         </div>
                          <p className="text-lg font-bold">Total: Ksh{order.totalPrice.toFixed(2)}</p>
                     </CardContent>
-                    <CardFooter className="gap-4">
+                    <CardFooter className="gap-4 flex-col sm:flex-row">
                         <Button asChild className="w-full" size="lg">
-                            <Link href={getGoogleMapsLink(order.deliveryAddress)} target="_blank" rel="noopener noreferrer">
+                            <Link href={getGoogleMapsLink(order.deliveryAddress, order.deliveryLocation)} target="_blank" rel="noopener noreferrer">
                                 <MapPin className="mr-2 h-4 w-4"/> Open in Maps
                             </Link>
                         </Button>
                         {order.status === 'Pending' && (
                              <Button 
-                                onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')} 
-                                className="w-full" size="lg" variant="outline">
-                                Start Delivery <ArrowRight className="ml-2 h-4 w-4"/>
+                                onClick={() => handleStartDelivery(order.id)} 
+                                className="w-full" size="lg" variant="outline"
+                                disabled={updatingOrderId === order.id || orders.some(o => o.status === 'Out for Delivery')}>
+                                {updatingOrderId === order.id ? <Loader2 className="animate-spin" /> : <Navigation className="mr-2 h-4 w-4"/>}
+                                Start Delivery
                             </Button>
                         )}
                          {order.status === 'Out for Delivery' && (
                              <Button 
-                                onClick={() => handleUpdateStatus(order.id, 'Delivered')} 
-                                className="w-full" size="lg" variant="secondary">
-                                Mark as Delivered
+                                onClick={() => handleFinishDelivery(order.id)} 
+                                className="w-full" size="lg" variant="secondary"
+                                disabled={updatingOrderId === order.id}>
+                                {updatingOrderId === order.id ? <Loader2 className="animate-spin" /> : <Check className="mr-2 h-4 w-4"/>}
+                                Confirm Payment & Mark Delivered
                             </Button>
                         )}
                     </CardFooter>
@@ -190,7 +261,6 @@ export default function DriverDeliveriesPage() {
             ))}
             </div>
         )}
-
     </div>
   );
 }

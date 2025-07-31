@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, Package, Truck, CircleCheck } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Order } from '@/lib/orders';
 import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
+import Image from 'next/image';
 
 export default function TrackOrderPage() {
     const [phone, setPhone] = React.useState('');
@@ -20,41 +21,53 @@ export default function TrackOrderPage() {
     const [error, setError] = React.useState<string | null>(null);
     const [searched, setSearched] = React.useState(false);
 
+    // Unsubscribe from snapshot listener
+    React.useEffect(() => {
+        let unsubscribe: (() => void) | null = null;
+    
+        if (searched && phone) {
+            setLoading(true);
+            setError(null);
+            setOrder(null);
+            
+            const q = query(
+                collection(db, "orders"),
+                where("customerPhone", "==", phone),
+                orderBy("createdAt", "desc"),
+                limit(1)
+            );
+    
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    setError('No recent order found for this phone number.');
+                    setOrder(null);
+                } else {
+                    const doc = snapshot.docs[0];
+                    const orderData = { id: doc.id, ...doc.data() } as Order;
+                    setOrder(orderData);
+                }
+                setLoading(false);
+            }, (err) => {
+                console.error(err);
+                setError('An error occurred while fetching your order.');
+                setLoading(false);
+            });
+        }
+    
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [searched, phone]);
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (!phone) {
             setError('Please enter a phone number.');
             return;
         }
-        setLoading(true);
         setSearched(true);
-        setError(null);
-        setOrder(null);
-
-        const q = query(
-            collection(db, "orders"),
-            where("customerPhone", "==", phone),
-            orderBy("createdAt", "desc"),
-            limit(1)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (snapshot.empty) {
-                setError('No recent order found for this phone number.');
-                setOrder(null);
-            } else {
-                const orderData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Order;
-                setOrder(orderData);
-            }
-            setLoading(false);
-        }, (err) => {
-            console.error(err);
-            setError('An error occurred while fetching your order.');
-            setLoading(false);
-        });
-
-        // It's good practice to unsubscribe when the component unmounts or a new search is made,
-        // but for this single-search component, we'll rely on page navigation to clean up.
     };
     
     const getStatusInfo = () => {
@@ -73,7 +86,24 @@ export default function TrackOrderPage() {
         }
     }
 
+    const getStaticMapUrl = () => {
+        if (!order || !order.deliveryLocation) return null;
+
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) return null;
+
+        const customerMarker = `markers=color:blue%7Clabel:C%7C${order.deliveryLocation.lat},${order.deliveryLocation.lng}`;
+        let driverMarker = '';
+
+        if (order.driverLocation && order.status === 'Out for Delivery') {
+            driverMarker = `&markers=color:red%7Clabel:D%7C${order.driverLocation.lat},${order.driverLocation.lng}`;
+        }
+        
+        return `https://maps.googleapis.com/maps/api/staticmap?size=600x400&maptype=roadmap&${customerMarker}${driverMarker}&key=${apiKey}`;
+    }
+
     const statusInfo = getStatusInfo();
+    const staticMapUrl = getStaticMapUrl();
 
     return (
         <div className="flex min-h-screen w-full flex-col">
@@ -115,6 +145,22 @@ export default function TrackOrderPage() {
                                     <h3 className="text-xl font-semibold">Order #{order.id.substring(0, 7)}</h3>
                                     <p className="text-muted-foreground">Placed on {order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}</p>
                                     
+                                     {staticMapUrl ? (
+                                        <div className="mt-4 rounded-md overflow-hidden border">
+                                            <Image 
+                                                src={staticMapUrl}
+                                                alt="Delivery Map"
+                                                width={600}
+                                                height={400}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="mt-4 p-4 rounded-md bg-muted text-muted-foreground text-center">
+                                            Map will appear once a driver is assigned and en route.
+                                        </div>
+                                    )}
+
                                     <div className="mt-6 space-y-4">
                                         <p className="font-medium">{statusInfo.text}</p>
                                         <Progress value={statusInfo.value} className={statusInfo.isError ? "bg-destructive/50" : ""} />

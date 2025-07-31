@@ -1,8 +1,17 @@
+
 export interface Order {
     id: string;
     customerName: string;
     customerPhone: string;
     deliveryAddress: string;
+    deliveryLocation: {
+        lat: number;
+        lng: number;
+    } | null;
+    driverLocation?: {
+        lat: number;
+        lng: number;
+    } | null;
     notes: string;
     items: {
       productId: string;

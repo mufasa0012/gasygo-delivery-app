@@ -25,6 +25,7 @@ export default function CheckoutPage() {
     const router = useRouter();
     const [addressMode, setAddressMode] = React.useState('manual');
     const [locationLoading, setLocationLoading] = React.useState(false);
+    const [location, setLocation] = React.useState<{lat: number; lng: number} | null>(null);
 
     const [formData, setFormData] = React.useState({
         customerName: '',
@@ -53,7 +54,8 @@ export default function CheckoutPage() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
-                setFormData(prev => ({ ...prev, deliveryAddress: `Lat: ${latitude}, Lon: ${longitude}` }));
+                setLocation({ lat: latitude, lng: longitude });
+                setFormData(prev => ({ ...prev, deliveryAddress: `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` }));
                 setLocationLoading(false);
                 toast({
                     title: 'Location Captured!',
@@ -68,7 +70,8 @@ export default function CheckoutPage() {
                     variant: 'destructive',
                 });
                 console.error("Geolocation error:", error);
-            }
+            },
+            { enableHighAccuracy: true }
         );
     };
 
@@ -97,11 +100,41 @@ export default function CheckoutPage() {
 
         setLoading(true);
 
+        let deliveryLocation = location;
+
+        if (isManualAddress) {
+             try {
+                const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(finalAddress)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+                const data = await response.json();
+                if (data.status === 'OK') {
+                    deliveryLocation = data.results[0].geometry.location;
+                } else {
+                     toast({
+                        title: 'Could Not Verify Address',
+                        description: "We couldn't find your address on the map. Please try sharing your location instead for accuracy.",
+                        variant: 'destructive',
+                    });
+                     setLoading(false);
+                    return;
+                }
+            } catch (error) {
+                 toast({
+                    title: 'Address Verification Failed',
+                    description: 'There was an issue verifying your address. Please check your connection or try sharing your location.',
+                    variant: 'destructive',
+                });
+                setLoading(false);
+                return;
+            }
+        }
+
+
         try {
             await addDoc(collection(db, 'orders'), {
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
                 deliveryAddress: finalAddress,
+                deliveryLocation,
                 notes: formData.notes,
                 items: cartItems.map(item => ({ 
                     productId: item.product.id,
@@ -120,7 +153,7 @@ export default function CheckoutPage() {
             });
 
             clearCart();
-            router.push('/');
+            router.push(`/track-order?phone=${formData.customerPhone}`);
 
         } catch (error) {
             console.error('Error placing order: ', error);
@@ -218,7 +251,7 @@ export default function CheckoutPage() {
                                                 )}
                                                 Share My Location
                                             </Button>
-                                            {formData.deliveryAddress.startsWith('Lat:') && (
+                                            {formData.deliveryAddress.startsWith('GPS:') && (
                                                 <p className="text-sm text-green-600 bg-green-500/10 p-2 rounded-md">{formData.deliveryAddress}</p>
                                             )}
                                         </div>

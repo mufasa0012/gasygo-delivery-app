@@ -55,7 +55,10 @@ export default function SettingsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setSettings(prev => ({ ...prev, [id]: value }));
-  }
+     if (id === 'primaryColor') {
+        document.documentElement.style.setProperty('--primary-hsl', value);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -72,7 +75,7 @@ export default function SettingsPage() {
 
   const handleSwitchChange = (id: string, checked: boolean) => {
     setSettings(prev => ({ ...prev, [id]: checked }));
-  }
+  };
 
   const handleSaveChanges = async () => {
     setSaving(true);
@@ -86,8 +89,8 @@ export default function SettingsPage() {
         }
         const authData = await authResponse.json();
         
-        if (!authData.urlEndpoint) {
-            throw new Error('Missing urlEndpoint from auth response.');
+        if (!authData.urlEndpoint || !authData.publicKey) {
+            throw new Error('Missing urlEndpoint or publicKey from auth response.');
         }
 
         const imageKit = new ImageKit({
@@ -103,7 +106,7 @@ export default function SettingsPage() {
             signature: authData.signature,
         });
         return uploadResult.url;
-      }
+      };
 
       if (logoFile) {
         updatedSettings.businessLogoUrl = await uploadFile(logoFile);
@@ -279,7 +282,6 @@ export default function SettingsPage() {
                   id="smsNotifications" 
                   checked={settings.smsNotifications} 
                   onCheckedChange={(checked) => handleSwitchChange('smsNotifications', checked)}
-                  disabled 
                 />
               </div>
                <div className="space-y-2 pt-4">

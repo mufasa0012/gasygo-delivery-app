@@ -96,7 +96,7 @@ export default function TrackOrderPage() {
         let driverMarker = '';
 
         if (order.driverLocation && order.status === 'Out for Delivery') {
-            driverMarker = `&markers=color:red%7Clabel:D%7C${order.driverLocation.lat},${order.driverLocation.lng}`;
+            driverMarker = `&markers=icon:https://ik.imagekit.io/j6n8rewp7/GasyGo/delivery-truck.png%7C${order.driverLocation.lat},${order.driverLocation.lng}`;
         }
         
         return `https://maps.googleapis.com/maps/api/staticmap?size=600x400&maptype=roadmap&${customerMarker}${driverMarker}&key=${apiKey}`;
@@ -205,3 +205,4 @@ export default function TrackOrderPage() {
         </div>
     );
 }
+

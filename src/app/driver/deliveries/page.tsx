@@ -83,8 +83,8 @@ export default function DriverDeliveriesPage() {
     }, [driverId, toast, stopLocationUpdates]);
 
     const startLocationUpdates = (orderId: string) => {
-        locationIntervalRef.current = setInterval(() => {
-            navigator.geolocation.getCurrentPosition(
+        const update = () => {
+             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     const orderRef = doc(db, 'orders', orderId);
@@ -100,7 +100,9 @@ export default function DriverDeliveriesPage() {
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
-        }, 15000); // Update every 15 seconds
+        }
+        update(); // Call it immediately
+        locationIntervalRef.current = setInterval(update, 15000); // Update every 15 seconds
     };
 
     const handleStartDelivery = async (orderId: string) => {

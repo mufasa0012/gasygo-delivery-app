@@ -29,7 +29,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardHeader>
       <CardContent className="flex-grow p-4">
         <CardTitle className="text-lg font-semibold font-headline">{product.name}</CardTitle>
-        <CardDescription className="mt-2 text-sm text-muted-foreground">{product.description}</CardDescription>
+        <CardDescription className="mt-2 text-sm text-muted-foreground line-clamp-2">{product.description}</CardDescription>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 bg-muted/20 mt-auto">
         <p className="text-xl font-bold text-foreground">

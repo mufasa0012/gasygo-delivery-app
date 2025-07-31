@@ -64,9 +64,8 @@ export default function Home() {
                         <Image
                             src={heroImageUrl}
                             alt="Gas delivery"
-                            layout="fill"
-                            objectFit="cover"
-                            className="z-0"
+                            fill
+                            className="z-0 object-cover"
                             data-ai-hint="gas delivery scooter"
                             priority
                         />

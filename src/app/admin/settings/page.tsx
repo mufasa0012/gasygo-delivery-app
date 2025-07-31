@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import * as React from 'react';
 import { db } from '@/lib/firebase';
-import { Loader2, Music4 } from 'lucide-react';
+import { Loader2, Music4, Save } from 'lucide-react';
 import Image from 'next/image';
 import ImageKit from 'imagekit-javascript';
 
@@ -146,7 +146,13 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="max-w-2xl mx-auto w-full">
-        <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">Settings</h1>
+        <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Settings</h1>
+            <Button onClick={handleSaveChanges} disabled={saving}>
+                {saving ? <Loader2 className="animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save All Changes
+            </Button>
+        </div>
         
         <div className="grid gap-8">
           <Card>
@@ -178,11 +184,6 @@ export default function SettingsPage() {
                 <Input id="logo" type="file" onChange={handleImageChange} accept="image/*" />
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleSaveChanges} disabled={saving}>
-                {saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}
-              </Button>
-            </CardFooter>
           </Card>
           
           <Card>
@@ -214,11 +215,6 @@ export default function SettingsPage() {
                 <Input id="heroImage" type="file" onChange={handleImageChange} accept="image/*"/>
               </div>
             </CardContent>
-             <CardFooter>
-              <Button onClick={handleSaveChanges} disabled={saving}>
-                {saving ? <Loader2 className="animate-spin" /> : 'Save Theme'}
-              </Button>
-            </CardFooter>
           </Card>
 
 
@@ -264,11 +260,6 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">Upload an audio file (MP3, WAV) to play for new orders.</p>
                 </div>
             </CardContent>
-             <CardFooter>
-              <Button onClick={handleSaveChanges} disabled={saving}>
-                {saving ? <Loader2 className="animate-spin" /> : 'Save Notification Settings'}
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </div>

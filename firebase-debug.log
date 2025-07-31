@@ -1,0 +1,9 @@
+[debug] [2025-07-31T12:27:27.430Z] ----------------------------------------------------------------------
+[debug] [2025-07-31T12:27:27.433Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/gv0i9ndcpzjpfi2yr06402kzy90q51ki-firebase-tools-14.10.1/lib/node_modules/firebase-tools/lib/bin/firebase.js ext:dev:upload your_publisher_id/your_extension_id
+[debug] [2025-07-31T12:27:27.434Z] CLI Version:   14.10.1
+[debug] [2025-07-31T12:27:27.434Z] Platform:      linux
+[debug] [2025-07-31T12:27:27.434Z] Node Version:  v20.19.1
+[debug] [2025-07-31T12:27:27.434Z] Time:          Thu Jul 31 2025 12:27:27 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-07-31T12:27:27.434Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-31T12:27:27.442Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]

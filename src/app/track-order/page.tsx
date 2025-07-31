@@ -156,7 +156,7 @@ export default function TrackOrderPage() {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="mt-4 p-4 rounded-md bg-muted text-muted-foreground text-center">
+                                        <div className="mt-4 p-4 rounded-md bg-muted text-muted-foreground text-center flex items-center justify-center h-[200px] md:h-[400px]">
                                             Map will appear once a driver is assigned and en route.
                                         </div>
                                     )}

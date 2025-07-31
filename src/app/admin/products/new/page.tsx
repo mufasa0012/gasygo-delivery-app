@@ -15,10 +15,6 @@ import { Loader2, UploadCloud, X } from 'lucide-react';
 import ImageKit from 'imagekit-javascript';
 import Image from 'next/image';
 
-const imageKit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-});
 
 export default function NewProductPage() {
   const { toast } = useToast();
@@ -72,12 +68,23 @@ export default function NewProductPage() {
     setLoading(true);
 
     try {
-      // 1. Get ImageKit authentication
+      // 1. Get ImageKit authentication details from our backend
       const authResponse = await fetch('/api/imagekit-auth');
       if (!authResponse.ok) {
           throw new Error('Failed to get ImageKit auth credentials');
       }
       const authData = await authResponse.json();
+      
+      if (!authData.urlEndpoint) {
+        throw new Error('Missing urlEndpoint from auth response.');
+      }
+
+      // Initialize ImageKit with fetched credentials
+      const imageKit = new ImageKit({
+          publicKey: authData.publicKey,
+          urlEndpoint: authData.urlEndpoint,
+      });
+
 
       // 2. Upload image to ImageKit
       const uploadResult = await imageKit.upload({

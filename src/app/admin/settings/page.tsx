@@ -15,11 +15,6 @@ import Image from 'next/image';
 import ImageKit from 'imagekit-javascript';
 import { Textarea } from '@/components/ui/textarea';
 
-const imageKit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-});
-
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -90,6 +85,15 @@ export default function SettingsPage() {
             throw new Error('Failed to get ImageKit auth credentials');
         }
         const authData = await authResponse.json();
+        
+        if (!authData.urlEndpoint) {
+            throw new Error('Missing urlEndpoint from auth response.');
+        }
+
+        const imageKit = new ImageKit({
+            publicKey: authData.publicKey,
+            urlEndpoint: authData.urlEndpoint,
+        });
 
         const uploadResult = await imageKit.upload({
             file: file,

@@ -17,11 +17,6 @@ import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/products';
 import ImageKit from 'imagekit-javascript';
 
-const imageKit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-});
-
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -95,6 +90,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         if (imageFile) {
             const authResponse = await fetch('/api/imagekit-auth');
             const authData = await authResponse.json();
+
+            if (!authData.urlEndpoint) {
+                throw new Error('Missing urlEndpoint from auth response.');
+            }
+
+            const imageKit = new ImageKit({
+                publicKey: authData.publicKey,
+                urlEndpoint: authData.urlEndpoint,
+            });
+
             const uploadResult = await imageKit.upload({
                 file: imageFile,
                 fileName: imageFile.name,

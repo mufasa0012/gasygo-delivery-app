@@ -25,11 +25,10 @@ interface Driver {
     status: 'Available' | 'On Delivery' | 'Offline';
 }
 
-function OrderDetailsPage({ params }: { params: { id: string } }) {
+function OrderDetailsPage({ id }: { id: string }) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { id } = params;
 
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
@@ -260,9 +259,10 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
 }
 
 export default function Page({ params }: { params: { id: string } }) {
+    const { id } = params;
     return (
         <React.Suspense fallback={<div className="flex flex-1 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-            <OrderDetailsPage params={params} />
+            <OrderDetailsPage id={id} />
         </React.Suspense>
     )
 }

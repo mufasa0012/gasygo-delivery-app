@@ -38,14 +38,21 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
   const [selectedDriver, setSelectedDriver] = React.useState('');
   const [selectedStatus, setSelectedStatus] = React.useState('');
 
-  const getLatLng = () => {
-    if (!order?.deliveryAddress) return null;
-    const match = order.deliveryAddress.match(/Lat: ([-]?\d+[.]?\d*), Lon: ([-]?\d+[.]?\d*)/);
+  const getLatLngFromAddress = (address: string) => {
+     if (!address) return null;
+    // Regex to find Lat/Lng in the address string
+    const match = address.match(/Lat: ([-]?\d+[.]?\d*), Lon: ([-]?\d+[.]?\d*)/);
     if (match) {
         return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
     }
     return null;
   }
+  
+  const getLatLng = () => {
+    if (!order) return null;
+    return order.deliveryLocation || getLatLngFromAddress(order.deliveryAddress);
+  }
+
   const latLng = getLatLng();
 
   const getStaticMapUrl = () => {
@@ -63,7 +70,7 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
 
   React.useEffect(() => {
     if (!id) return;
-    const unsubOrder = onSnapshot(doc(db, 'orders', id as string), (doc) => {
+    const unsubOrder = onSnapshot(doc(db, 'orders', id), (doc) => {
         if (doc.exists()) {
             const orderData = { id: doc.id, ...doc.data() } as Order;
             setOrder(orderData);
@@ -147,7 +154,7 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
         <div>
            <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-headline">Order #{order.id.substring(0, 7)}</h1>
            <p className="text-sm text-muted-foreground">
-                Placed on {order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}
+                {order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}
             </p>
         </div>
       </div>
@@ -168,7 +175,7 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
                             alt={`Map of ${order.deliveryAddress}`}
                             width={600}
                             height={300}
-                            className="rounded-md border object-cover"
+                            className="rounded-md border object-cover w-full"
                           />
                        </Link>
                     ) : (
@@ -254,7 +261,7 @@ function OrderDetailsPage({ params }: { params: { id: string } }) {
 
 export default function Page({ params }: { params: { id: string } }) {
     return (
-        <React.Suspense fallback={<div>Loading...</div>}>
+        <React.Suspense fallback={<div className="flex flex-1 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
             <OrderDetailsPage params={params} />
         </React.Suspense>
     )

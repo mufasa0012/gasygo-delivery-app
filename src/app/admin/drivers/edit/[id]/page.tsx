@@ -36,7 +36,7 @@ export default function EditDriverPage({ params }: { params: { id: string } }) {
     if (!id) return;
     const fetchDriver = async () => {
       setLoading(true);
-      const driverDoc = await getDoc(doc(db, 'drivers', id as string));
+      const driverDoc = await getDoc(doc(db, 'drivers', id));
       if (driverDoc.exists()) {
         setDriverData(driverDoc.data() as DriverData);
       } else {
@@ -72,7 +72,7 @@ export default function EditDriverPage({ params }: { params: { id: string } }) {
     }
     setSaving(true);
     try {
-      const driverRef = doc(db, 'drivers', id as string);
+      const driverRef = doc(db, 'drivers', id);
       await updateDoc(driverRef, { ...driverData });
       toast({
         title: 'Driver Updated!',

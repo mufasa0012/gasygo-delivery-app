@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/products';
 import ImageKit from 'imagekit-javascript';
 
@@ -22,10 +22,9 @@ const imageKit = new ImageKit({
     urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
 });
 
-export default function EditProductPage() {
+export default function EditProductPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
-  const params = useParams();
   const { id } = params;
 
   const [loading, setLoading] = React.useState(true);
@@ -41,7 +40,11 @@ export default function EditProductPage() {
       setLoading(true);
       const productDoc = await getDoc(doc(db, 'products', id as string));
       if (productDoc.exists()) {
-        setProductData({ id: productDoc.id, ...productDoc.data() });
+        const data = productDoc.data();
+        setProductData({ id: productDoc.id, ...data });
+        if (data.image) {
+            setImagePreview(data.image);
+        }
       } else {
         toast({
             title: 'Not Found',
@@ -145,20 +148,20 @@ export default function EditProductPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
-              <Input id="name" value={productData.name} onChange={handleInputChange} />
+              <Input id="name" value={productData.name || ''} onChange={handleInputChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={productData.description} onChange={handleInputChange}/>
+              <Textarea id="description" value={productData.description || ''} onChange={handleInputChange}/>
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="price">Price (Ksh)</Label>
-                    <Input id="price" type="number" value={productData.price}  onChange={handleInputChange}/>
+                    <Input id="price" type="number" value={productData.price || ''}  onChange={handleInputChange}/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select value={productData.category} onValueChange={handleCategoryChange}>
+                    <Select value={productData.category || ''} onValueChange={handleCategoryChange}>
                         <SelectTrigger id="category">
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
@@ -170,8 +173,14 @@ export default function EditProductPage() {
                 </div>
             </div>
             <div className="space-y-2">
-              <Label>Current Image</Label>
-              <Image src={imagePreview || productData.image!} alt={productData.name!} width={100} height={100} className="rounded-md" />
+              <Label>Image Preview</Label>
+              {imagePreview ? (
+                <Image src={imagePreview} alt={productData.name || 'Product Image'} width={100} height={100} className="rounded-md border object-cover" />
+              ) : (
+                <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                    No Image
+                </div>
+              )}
             </div>
              <div className="space-y-2">
                 <Label htmlFor="image">Upload New Image</Label>

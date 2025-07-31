@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -10,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, ArrowLeft, User, Phone, MapPin, Package, Truck } from 'lucide-react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Order } from '@/lib/orders';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -26,10 +25,9 @@ interface Driver {
     status: 'Available' | 'On Delivery' | 'Offline';
 }
 
-function OrderDetailsPage() {
+function OrderDetailsPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
-  const params = useParams();
   const searchParams = useSearchParams();
   const { id } = params;
 
@@ -254,10 +252,10 @@ function OrderDetailsPage() {
   );
 }
 
-export default function Page() {
+export default function Page({ params }: { params: { id: string } }) {
     return (
         <React.Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPage />
+            <OrderDetailsPage params={params} />
         </React.Suspense>
     )
 }

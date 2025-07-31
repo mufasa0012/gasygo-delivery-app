@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DriverData {
@@ -19,10 +19,9 @@ interface DriverData {
   status: 'Available' | 'On Delivery' | 'Offline';
 }
 
-export default function EditDriverPage() {
+export default function EditDriverPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
   const router = useRouter();
-  const params = useParams();
   const { id } = params;
 
   const [loading, setLoading] = React.useState(true);

@@ -23,11 +23,21 @@ import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
+interface Settings {
+    heroImageUrl: string;
+    heroHeadline: string;
+    heroSubheadline: string;
+}
+
 export default function Home() {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [heroImageUrl, setHeroImageUrl] = React.useState('https://placehold.co/1200x600.png');
-  const [loadingHero, setLoadingHero] = React.useState(true);
+  const [settings, setSettings] = React.useState<Settings>({
+      heroImageUrl: 'https://placehold.co/1200x600.png',
+      heroHeadline: 'Your Reliable Gas Partner, Delivered!',
+      heroSubheadline: 'Get K-Gas, Total Gas, Afrigas, and more, delivered fast and free right to your doorstep in Nairobi.'
+  });
+  const [loadingSettings, setLoadingSettings] = React.useState(true);
 
   React.useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
@@ -37,14 +47,20 @@ export default function Home() {
     });
     
     const fetchSettings = async () => {
-        setLoadingHero(true);
+        setLoadingSettings(true);
         const docRef = doc(db, 'settings', 'businessInfo');
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists() && docSnap.data().heroImageUrl) {
-            setHeroImageUrl(docSnap.data().heroImageUrl);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            setSettings(prev => ({
+                ...prev,
+                heroImageUrl: data.heroImageUrl || prev.heroImageUrl,
+                heroHeadline: data.heroHeadline || prev.heroHeadline,
+                heroSubheadline: data.heroSubheadline || prev.heroSubheadline,
+            }));
         }
-        setLoadingHero(false);
+        setLoadingSettings(false);
     };
     
     fetchSettings();
@@ -58,11 +74,11 @@ export default function Home() {
         <section className="w-full">
             <div className="container px-4 md:px-6">
                 <div className="relative h-[60vh] max-h-[700px] md:h-[600px] w-full mt-8 rounded-xl overflow-hidden flex items-center justify-center text-center">
-                    {loadingHero ? (
+                    {loadingSettings ? (
                         <Skeleton className="h-full w-full" />
                     ) : (
                         <Image
-                            src={heroImageUrl}
+                            src={settings.heroImageUrl}
                             alt="Gas delivery"
                             fill
                             className="z-0 object-cover"
@@ -72,14 +88,23 @@ export default function Home() {
                     )}
                     <div className="absolute inset-0 bg-black/50 z-10"></div>
                     <div className="relative z-20 space-y-6 max-w-4xl px-4">
-                        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl font-headline">
-                            Your Reliable Gas Partner,{' '}
-                            <span className="text-primary">Delivered!</span>
-                        </h1>
-                        <p className="max-w-2xl text-lg text-primary-foreground/90 mx-auto">
-                            Get K-Gas, Total Gas, Afrigas, and more, delivered fast and
-                            free right to your doorstep in Nairobi.
-                        </p>
+                        {loadingSettings ? (
+                            <div className='space-y-4'>
+                                <Skeleton className="h-12 w-3/4 mx-auto" />
+                                <Skeleton className="h-8 w-1/2 mx-auto" />
+                                <Skeleton className="h-6 w-full max-w-lg mx-auto" />
+                                <Skeleton className="h-6 w-full max-w-md mx-auto" />
+                            </div>
+                        ) : (
+                             <>
+                                <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl font-headline"
+                                    dangerouslySetInnerHTML={{ __html: settings.heroHeadline.replace(/,(.*)$/, ',<span class="text-primary">$1</span>')}}
+                                />
+                                <p className="max-w-2xl text-lg text-primary-foreground/90 mx-auto">
+                                    {settings.heroSubheadline}
+                                </p>
+                             </>
+                        )}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Button asChild size="lg" className="text-lg px-8 py-6">
                             <Link href="/products">

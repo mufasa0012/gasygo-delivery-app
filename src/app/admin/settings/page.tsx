@@ -13,6 +13,7 @@ import { db } from '@/lib/firebase';
 import { Loader2, Music4, Save } from 'lucide-react';
 import Image from 'next/image';
 import ImageKit from 'imagekit-javascript';
+import { Textarea } from '@/components/ui/textarea';
 
 const imageKit = new ImageKit({
     publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
@@ -32,6 +33,8 @@ export default function SettingsPage() {
     smsNotifications: false,
     businessLogoUrl: '',
     heroImageUrl: '',
+    heroHeadline: 'Your Reliable Gas Partner, Delivered!',
+    heroSubheadline: 'Get K-Gas, Total Gas, Afrigas, and more, delivered fast and free right to your doorstep in Nairobi.',
     primaryColor: '221 83% 53%', // Default primary color HSL
     newOrderRingtoneUrl: '',
   });
@@ -54,7 +57,7 @@ export default function SettingsPage() {
   }, []);
 
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setSettings(prev => ({ ...prev, [id]: value }));
   }
@@ -145,11 +148,11 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight font-headline">Settings</h1>
             <Button onClick={handleSaveChanges} disabled={saving}>
-                {saving ? <Loader2 className="animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {saving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="mr-2 h-4 w-4" />}
                 Save All Changes
             </Button>
         </div>
@@ -186,6 +189,34 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
           
+           <Card>
+            <CardHeader>
+              <CardTitle>Homepage Content</CardTitle>
+              <CardDescription>Customize the text displayed on your landing page.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="space-y-2">
+                <Label htmlFor="heroHeadline">Hero Headline</Label>
+                <Textarea 
+                  id="heroHeadline"
+                  value={settings.heroHeadline} 
+                  onChange={handleInputChange}
+                  placeholder="e.g., Your Reliable Gas Partner, Delivered!"
+                 />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="heroSubheadline">Hero Sub-headline</Label>
+                 <Textarea 
+                  id="heroSubheadline"
+                  value={settings.heroSubheadline} 
+                  onChange={handleInputChange}
+                  placeholder="e.g., Get K-Gas, Total Gas, and more, delivered fast..."
+                  rows={3}
+                 />
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Theme & Appearance</CardTitle>

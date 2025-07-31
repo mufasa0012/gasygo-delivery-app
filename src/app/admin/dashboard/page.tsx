@@ -68,7 +68,7 @@ function AIBusinessCoach() {
                   </p>
               )}
           </CardContent>
-           <CardFooter className="gap-2">
+           <CardFooter className="flex-col sm:flex-row gap-2">
                 <form action={formAction} className="w-full">
                     <input type="hidden" name="topic" value="Business Growth" />
                     <Button type="submit" size="sm" variant="ghost" disabled={isPending} className="w-full justify-start">
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's a snapshot of your business today.</p>
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
           <Link href="/admin/orders/new">Create New Order</Link>
         </Button>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -204,8 +204,8 @@ export default function AdminDashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Driver</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="hidden md:table-cell">Driver</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -217,10 +217,10 @@ export default function AdminDashboard() {
                     Array.from({length: 5}).map((_, i) => (
                         <TableRow key={i}>
                             <TableCell><Skeleton className="h-5 w-24"/></TableCell>
-                            <TableCell><Skeleton className="h-6 w-20 rounded-full"/></TableCell>
-                            <TableCell><Skeleton className="h-5 w-20"/></TableCell>
+                            <TableCell className="hidden sm:table-cell"><Skeleton className="h-6 w-20 rounded-full"/></TableCell>
+                            <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20"/></TableCell>
                             <TableCell className="text-right"><Skeleton className="h-5 w-16"/></TableCell>
-                            <TableCell><Skeleton className="h-8 w-8"/></TableCell>
+                            <TableCell><Skeleton className="h-8 w-8 ml-auto"/></TableCell>
                         </TableRow>
                     ))
                 ) : recentOrders.length === 0 ? (
@@ -232,18 +232,21 @@ export default function AdminDashboard() {
                 ) : (
                     recentOrders.map(order => (
                          <TableRow key={order.id} className="cursor-pointer" onClick={() => router.push(`/admin/orders/${order.id}`)}>
-                            <TableCell className="font-medium">{order.customerName}</TableCell>
                             <TableCell>
+                                <div className="font-medium">{order.customerName}</div>
+                                <div className="text-sm text-muted-foreground md:hidden">{order.driverName || 'Unassigned'}</div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
                                 <Badge variant="outline" className={cn("capitalize", getStatusBadgeClass(order.status))}>
                                     {order.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{order.driverName || 'Unassigned'}</TableCell>
+                            <TableCell className="hidden md:table-cell">{order.driverName || 'Unassigned'}</TableCell>
                             <TableCell className="text-right">Ksh{order.totalPrice.toFixed(2)}</TableCell>
                             <TableCell>
                                <DropdownMenu>
                                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                    <Button aria-haspopup="true" size="icon" variant="ghost" className="ml-auto flex">
                                         <MoreHorizontal className="h-4 w-4" />
                                         <span className="sr-only">Toggle menu</span>
                                     </Button>

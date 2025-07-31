@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -149,8 +150,8 @@ export default function NewOrderPage() {
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="max-w-4xl mx-auto w-full">
         <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">Create New Order</h1>
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Order Details</CardTitle>
@@ -211,7 +212,7 @@ export default function NewOrderPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <Card className="sticky top-20">
               <CardHeader>
                 <CardTitle>Order Summary & Actions</CardTitle>

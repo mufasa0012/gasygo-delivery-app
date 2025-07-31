@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -189,11 +190,11 @@ export default function CheckoutPage() {
         <div className="flex min-h-screen w-full flex-col">
             <Header />
             <main className="flex-1 bg-muted/20 py-12 md:py-20">
-                <div className="container mx-auto max-w-4xl">
+                <div className="container mx-auto max-w-4xl px-4">
                      <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl font-headline text-center mb-12">
                         Checkout
                     </h1>
-                    <div className="grid md:grid-cols-2 gap-12">
+                    <div className="grid lg:grid-cols-2 gap-12">
                         <div>
                             <Card>
                                 <CardHeader>
@@ -274,7 +275,7 @@ export default function CheckoutPage() {
                                         {cartItems.map(item => (
                                             <div key={item.product.id} className="flex justify-between items-center">
                                                 <div className="flex items-center gap-3">
-                                                    <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="rounded-md" />
+                                                    <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="rounded-md" data-ai-hint={item.product.hint}/>
                                                     <div>
                                                         <p className="font-medium">{item.product.name}</p>
                                                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>

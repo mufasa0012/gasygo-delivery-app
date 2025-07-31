@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2, ArrowLeft, User, Phone, MapPin, Package, Truck, Receipt } from 'lucide-react';
+import { Loader2, ArrowLeft, User, Phone, MapPin, Package, Truck } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Order } from '@/lib/orders';
 import { format } from 'date-fns';
@@ -146,8 +147,8 @@ function OrderDetailsPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-           <h1 className="text-3xl font-bold tracking-tight font-headline">Order #{order.id.substring(0, 7)}</h1>
-           <p className="text-muted-foreground">
+           <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-headline">Order #{order.id.substring(0, 7)}</h1>
+           <p className="text-sm text-muted-foreground">
                 Placed on {order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}
             </p>
         </div>
@@ -195,7 +196,7 @@ function OrderDetailsPage() {
                         ))}
                     </ul>
                  </CardContent>
-                 <CardFooter className="bg-muted/50 justify-between font-bold text-lg">
+                 <CardFooter className="bg-muted/50 justify-between font-bold text-lg p-4">
                     <span>Total</span>
                     <span>Ksh{order.totalPrice.toFixed(2)}</span>
                  </CardFooter>

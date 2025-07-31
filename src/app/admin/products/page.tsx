@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -82,11 +83,11 @@ export default function ProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
+                <TableHead className="w-[80px] sm:w-[100px]">
                   <span className="sr-only">Image</span>
                 </TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -103,7 +104,7 @@ export default function ProductsPage() {
               ) : (
                 products.map((product) => (
                     <TableRow key={product.fbId}>
-                    <TableCell className="hidden sm:table-cell">
+                    <TableCell>
                         <Image
                         alt={product.name}
                         className="aspect-square rounded-md object-cover"
@@ -113,13 +114,16 @@ export default function ProductsPage() {
                         data-ai-hint={product.hint}
                         />
                     </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.category}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{product.name}</div>
+                      <div className="text-sm text-muted-foreground sm:hidden">{product.category}</div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{product.category}</TableCell>
                     <TableCell className="text-right">Ksh{product.price.toFixed(2)}</TableCell>
                     <TableCell>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <Button aria-haspopup="true" size="icon" variant="ghost" className="flex ml-auto">
                                 <MoreHorizontal className="h-4 w-4" />
                                 <span className="sr-only">Toggle menu</span>
                             </Button>

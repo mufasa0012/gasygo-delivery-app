@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -108,9 +109,8 @@ export default function DriversPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead className="hidden sm:table-cell">Phone</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Assigned Orders</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -121,33 +121,34 @@ export default function DriversPage() {
                 Array.from({length: 3}).map((_, i) => (
                     <TableRow key={i}>
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                     </TableRow>
                 ))
               ) : drivers.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={4} className="h-24 text-center">
                     No drivers found. Add one to get started.
                     </TableCell>
                 </TableRow>
               ) : (
                 drivers.map(driver => (
                     <TableRow key={driver.id}>
-                        <TableCell className="font-medium">{driver.name}</TableCell>
-                        <TableCell>{driver.phone}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{driver.name}</div>
+                          <div className="text-sm text-muted-foreground sm:hidden">{driver.phone}</div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">{driver.phone}</TableCell>
                         <TableCell>
                              <Badge variant="outline" className={cn("capitalize", getStatusBadgeClass(driver.status))}>
                                 {driver.status}
                             </Badge>
                         </TableCell>
-                        <TableCell>0</TableCell>
                         <TableCell>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <Button aria-haspopup="true" size="icon" variant="ghost" className="ml-auto flex">
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Toggle menu</span>
                                 </Button>

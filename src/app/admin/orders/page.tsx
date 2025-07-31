@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -75,7 +76,7 @@ export default function OrdersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>
@@ -88,10 +89,10 @@ export default function OrdersPage() {
                  Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                     </TableRow>
                  ))
               ) : orders.length === 0 ? (
@@ -103,8 +104,11 @@ export default function OrdersPage() {
               ) : (
                 orders.map(order => (
                     <TableRow key={order.id} className="cursor-pointer" onClick={() => router.push(`/admin/orders/${order.id}`)}>
-                        <TableCell className="font-medium">{order.customerName}</TableCell>
-                        <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{order.customerName}</div>
+                           <div className="text-sm text-muted-foreground md:hidden">{order.createdAt ? format(order.createdAt.toDate(), 'PP') : 'N/A'}</div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{order.createdAt ? format(order.createdAt.toDate(), 'PPpp') : 'N/A'}</TableCell>
                         <TableCell>
                             <Badge variant="outline" className={cn("capitalize", getStatusBadgeClass(order.status))}>
                                 {order.status}
@@ -114,7 +118,7 @@ export default function OrdersPage() {
                          <TableCell>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <Button aria-haspopup="true" size="icon" variant="ghost" className="ml-auto flex">
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Toggle menu</span>
                                 </Button>

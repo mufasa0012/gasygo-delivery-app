@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -56,7 +57,7 @@ export default function Home() {
       <main className="flex-1">
         <section className="w-full">
             <div className="container px-4 md:px-6">
-                <div className="relative h-[500px] md:h-[600px] w-full mt-8 rounded-xl overflow-hidden flex items-center justify-center text-center">
+                <div className="relative h-[60vh] max-h-[700px] md:h-[600px] w-full mt-8 rounded-xl overflow-hidden flex items-center justify-center text-center">
                     {loadingHero ? (
                         <Skeleton className="h-full w-full" />
                     ) : (
@@ -81,7 +82,7 @@ export default function Home() {
                             free right to your doorstep in Nairobi.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-6">
+                            <Button asChild size="lg" className="text-lg px-8 py-6">
                             <Link href="/products">
                                 Order Gas Now <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
@@ -157,12 +158,12 @@ export default function Home() {
                             align: "start",
                             loop: products.length > 3,
                         }}
-                        className="w-full max-w-sm md:max-w-4xl lg:max-w-6xl mx-auto"
+                        className="w-full max-w-sm sm:max-w-xl md:max-w-4xl lg:max-w-6xl mx-auto"
                     >
                         <CarouselContent className="-ml-4">
                             {loading ? (
                                 Array.from({ length: 3 }).map((_, index) => (
-                                    <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                    <CarouselItem key={index} className="pl-4 sm:basis-1/2 lg:basis-1/3">
                                         <div className="p-1 h-full">
                                             <Card className="h-full">
                                                 <CardContent className="p-4 flex flex-col gap-4">
@@ -177,7 +178,7 @@ export default function Home() {
                                 ))
                             ) : (
                                 products.map(product => (
-                                    <CarouselItem key={product.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                    <CarouselItem key={product.id} className="pl-4 sm:basis-1/2 lg:basis-1/3">
                                         <div className="p-1 h-full">
                                             <ProductCard product={product} />
                                         </div>
@@ -185,8 +186,8 @@ export default function Home() {
                                 ))
                             )}
                         </CarouselContent>
-                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 hidden sm:flex" />
+                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 hidden sm:flex" />
                     </Carousel>
                 </div>
                  <div className="mt-12 text-center">

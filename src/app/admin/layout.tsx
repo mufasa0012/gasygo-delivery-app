@@ -99,7 +99,7 @@ function AdminSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="w-full h-px bg-sidebar-border" />
+        <div className="w-full h-px bg-border" />
         <SidebarMenu>
             {bottomMenuItems.map((item) => (
                  <SidebarMenuItem key={item.href}>
@@ -215,10 +215,10 @@ export default function AdminLayout({
       <div className="flex min-h-screen">
         <AdminSidebar />
         <SidebarInset>
-            <header className="flex h-16 items-center justify-between border-b px-6">
+            <header className="flex h-16 items-center justify-between border-b px-4 md:px-6">
                 <div className="flex items-center gap-4">
                     <SidebarTrigger />
-                    <h1 className="text-lg font-semibold">Admin Panel</h1>
+                    <h1 className="text-lg font-semibold md:text-xl">Admin Panel</h1>
                 </div>
                 <div className="flex items-center gap-4">
                     <OrderNotifications />

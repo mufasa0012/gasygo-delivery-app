@@ -16,6 +16,7 @@ import { CartContent } from './CartContent';
 import { Badge } from './ui/badge';
 import React from 'react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const { totalItems } = useCart();
@@ -27,6 +28,17 @@ export function Header() {
       { href: '/track-order', label: 'Track Order'},
       { href: '/contact', label: 'Contact Us' },
   ];
+  
+  React.useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    }
+  }, [isMenuOpen]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -60,7 +72,7 @@ export function Header() {
                 <span className="sr-only">Open cart</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetContent className="w-[calc(100vw-2rem)] max-w-md">
               <SheetHeader>
                  <VisuallyHidden>
                     <SheetTitle>Shopping Cart</SheetTitle>
@@ -88,15 +100,20 @@ export function Header() {
         </div>
       </div>
        {isMenuOpen && (
-        <div className="md:hidden bg-background/95 pb-4">
-          <nav className="container flex flex-col gap-4">
+        <div className={cn(
+          "md:hidden bg-background/95 pb-4 absolute top-20 left-0 w-full h-[calc(100vh-5rem)] z-50",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        )}
+          data-state={isMenuOpen ? 'open' : 'closed'}
+        >
+          <nav className="container flex flex-col gap-4 pt-4">
              {navLinks.map(link => (
-               <Button key={link.href} variant="link" asChild className="text-foreground text-base justify-start">
+               <Button key={link.href} variant="ghost" asChild className="text-lg justify-start" onClick={() => setIsMenuOpen(false)}>
                 <Link href={link.href}>{link.label}</Link>
                </Button>
             ))}
-             <Button asChild>
-                <Link href="/login">Login</Link>
+             <Button asChild size="lg" className="mt-4" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/login">Login / Admin</Link>
              </Button>
           </nav>
         </div>

@@ -56,7 +56,7 @@ export default function SettingsPage() {
     const { id, value } = e.target;
     setSettings(prev => ({ ...prev, [id]: value }));
      if (id === 'primaryColor') {
-        document.documentElement.style.setProperty('--primary-hsl', value);
+        document.documentElement.style.setProperty('--primary', value);
     }
   };
 
@@ -125,7 +125,7 @@ export default function SettingsPage() {
       setRingtoneFile(null);
       
       if (updatedSettings.primaryColor) {
-        document.documentElement.style.setProperty('--primary-hsl', updatedSettings.primaryColor);
+        document.documentElement.style.setProperty('--primary', updatedSettings.primaryColor);
       }
 
 
@@ -156,9 +156,9 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="max-w-4xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <h1 className="text-3xl font-bold tracking-tight font-headline">Settings</h1>
-            <Button onClick={handleSaveChanges} disabled={saving}>
+            <Button onClick={handleSaveChanges} disabled={saving} className="w-full sm:w-auto">
                 {saving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="mr-2 h-4 w-4" />}
                 Save All Changes
             </Button>
